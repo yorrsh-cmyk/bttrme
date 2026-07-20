@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { DEFAULT_LANGUAGE, dirFor, t } from "@/i18n/catalog";
+import { getLanguage } from "@/server/language";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -11,13 +12,14 @@ export const viewport: Viewport = {
   initialScale: 1,
 };
 
-// The signed-in shell ((app)/layout.tsx) re-reads lang/dir from the user row;
-// this root default covers the login screen before a session exists.
-export default function RootLayout({
+// <html lang/dir> comes from the language cookie (mirror of the user row,
+// synced on login and settings save) — no DB read on the render hot path.
+export default async function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
+  const language = await getLanguage();
   return (
-    <html lang={DEFAULT_LANGUAGE} dir={dirFor(DEFAULT_LANGUAGE)}>
+    <html lang={language} dir={dirFor(language)}>
       <body className="min-h-dvh antialiased">{children}</body>
     </html>
   );

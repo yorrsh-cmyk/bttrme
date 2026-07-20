@@ -1,7 +1,7 @@
 @import "tailwindcss";
 
-/* RTL-first: components use only logical properties/utilities
-   (ms-*/me-*/ps-*/pe-*, start/end) — never ml/mr/left/right. */
+/* RTL-first: components use only logical properties and utilities
+   (ms, me, ps, pe, start, end) — never ml, mr, left, right. */
 
 :root {
   /* Neutral palette seed — no red anywhere (Phase 1 §3). */
