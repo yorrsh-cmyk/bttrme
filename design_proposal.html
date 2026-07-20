@@ -1,0 +1,1015 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Bttrme — Design Proposal (Phase 5)</title>
+<style>
+  :root{
+    --bg:#f5f4f1; --card:#ffffff; --ink:#2b2a27; --muted:#8a867e; --line:#e7e4de;
+    --accent:#2f6f68; --accent-ink:#ffffff; --accent-soft:#e3efed;
+    --work:#5b7ba6; --family:#c2795b; --personal:#8a6fb0; --health:#5f9b6d; --rest:#c2a35b;
+    --done:#5f9b6d; --done-soft:#e7f1e9; --neutral-soft:#efede8;
+    --radius:14px;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  html{scroll-behavior:smooth;}
+  body{
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    background:var(--bg); color:var(--ink); line-height:1.5;
+  }
+  a{color:var(--accent);}
+
+  /* ===== proposal shell ===== */
+  .shell{display:flex; min-height:100vh;}
+  nav.side{
+    width:230px; flex:0 0 230px; border-right:1px solid var(--line);
+    padding:22px 14px; position:sticky; top:0; height:100vh; overflow-y:auto; background:#faf9f7;
+  }
+  nav.side h1{font-size:20px; letter-spacing:-.02em; margin-bottom:2px;}
+  nav.side .sub{font-size:12px; color:var(--muted); margin-bottom:18px;}
+  nav.side .grp{font-size:11px; text-transform:uppercase; letter-spacing:.08em; color:var(--muted); margin:16px 0 6px;}
+  nav.side button{
+    display:block; width:100%; text-align:left; background:none; border:0; cursor:pointer;
+    font:inherit; font-size:13.5px; color:var(--ink); padding:7px 10px; border-radius:8px;
+  }
+  nav.side button:hover{background:#f0efeb;}
+  nav.side button.on{background:var(--accent-soft); color:var(--accent); font-weight:600;}
+  main{flex:1; padding:30px 34px 60px; max-width:1200px;}
+  .panel{display:none;}
+  .panel.on{display:block;}
+  .panel > h2{font-size:22px; letter-spacing:-.02em; margin-bottom:4px;}
+  .panel > .crumb{font-size:12.5px; color:var(--muted); margin-bottom:22px;}
+  .stage{display:flex; gap:34px; align-items:flex-start; flex-wrap:wrap;}
+  .notes{flex:1; min-width:280px; max-width:460px; font-size:14px;}
+  .notes h3{font-size:13px; text-transform:uppercase; letter-spacing:.07em; color:var(--muted); margin-bottom:10px;}
+  .notes ul{padding-left:18px; display:grid; gap:8px;}
+  .notes .demo{
+    margin-top:18px; padding:12px 14px; background:var(--accent-soft); border-radius:10px; font-size:13px;
+  }
+  .pager{margin-top:28px; display:flex; gap:10px;}
+  .pager button{
+    font:inherit; font-size:13.5px; padding:8px 16px; border-radius:10px; cursor:pointer;
+    border:1px solid var(--line); background:var(--card);
+  }
+  .pager button.primary{background:var(--accent); color:#fff; border-color:var(--accent);}
+
+  /* ===== phone frame ===== */
+  .phone{
+    width:375px; flex:0 0 375px; height:740px; background:var(--card);
+    border:1px solid #d9d6cf; border-radius:34px; box-shadow:0 18px 40px rgba(40,38,34,.10);
+    display:flex; flex-direction:column; overflow:hidden;
+  }
+  .p-top{
+    padding:16px 18px 10px; display:flex; align-items:baseline; justify-content:space-between;
+    border-bottom:1px solid var(--line); background:#fdfcfa;
+  }
+  .p-top .brand{font-weight:700; font-size:13px; color:var(--accent); letter-spacing:-.01em;}
+  .p-top .where{font-size:13px; color:var(--muted);}
+  .p-body{flex:1; overflow-y:auto; padding:16px 16px 24px; background:#fbfaf8;}
+  .p-tabs{
+    display:flex; border-top:1px solid var(--line); background:#fdfcfa;
+  }
+  .p-tabs span{
+    flex:1; text-align:center; font-size:11.5px; padding:12px 0 14px; color:var(--muted);
+  }
+  .p-tabs span.on{color:var(--accent); font-weight:600;}
+
+  /* ===== shared in-app pieces ===== */
+  .card{background:var(--card); border:1px solid var(--line); border-radius:var(--radius); padding:14px 16px; margin-bottom:12px;}
+  .card h4{font-size:12px; text-transform:uppercase; letter-spacing:.07em; color:var(--muted); margin-bottom:8px; font-weight:600;}
+  .h-big{font-size:19px; letter-spacing:-.02em; margin-bottom:2px;}
+  .sub2{font-size:12.5px; color:var(--muted);}
+  .btn{
+    display:inline-block; font:inherit; border:0; cursor:pointer; border-radius:12px;
+    padding:12px 16px; font-size:15px; font-weight:600; text-align:center;
+  }
+  .btn.primary{background:var(--accent); color:#fff; width:100%;}
+  .btn.quiet{background:#f0efeb; color:var(--ink);}
+  .btn.ghost{background:none; border:1px solid var(--line); color:var(--ink);}
+  .btn.sm{padding:8px 12px; font-size:13px; border-radius:10px; font-weight:500;}
+  .row{display:flex; gap:8px;}
+  .row .btn{flex:1;}
+  .block{
+    background:var(--card); border:1px solid var(--line); border-left:4px solid var(--muted);
+    border-radius:12px; padding:10px 12px; margin-bottom:8px; font-size:14px;
+  }
+  .block .t{font-weight:600;}
+  .block .m{font-size:12px; color:var(--muted); margin-top:1px;}
+  .b-work{border-left-color:var(--work);} .b-family{border-left-color:var(--family);}
+  .b-personal{border-left-color:var(--personal);} .b-health{border-left-color:var(--health);}
+  .b-rest{border-left-color:var(--rest);}
+  .chip{
+    display:inline-block; font-size:11.5px; padding:3px 9px; border-radius:99px;
+    background:#f0efeb; color:#6d6a63;
+  }
+  .chip.done{background:var(--done-soft); color:#3c6b47;}
+  .chip.cat-work{background:#e9eef5; color:var(--work);} .chip.cat-family{background:#f6ebe4; color:#a05f42;}
+  .chip.cat-personal{background:#efe9f6; color:var(--personal);} .chip.cat-health{background:#e8f2ea; color:#477952;}
+  .chip.cat-rest{background:#f5efdf; color:#95793a;}
+  .field{margin-bottom:12px;}
+  .field label{display:block; font-size:12px; color:var(--muted); margin-bottom:4px;}
+  .field input,.field textarea,.field select{
+    width:100%; font:inherit; font-size:15px; padding:10px 12px; border:1px solid var(--line);
+    border-radius:10px; background:#fff; color:var(--ink);
+  }
+  .field textarea{resize:none;}
+  .seg{display:flex; border:1px solid var(--line); border-radius:10px; overflow:hidden;}
+  .seg button{flex:1; font:inherit; font-size:13px; padding:9px 0; border:0; background:#fff; cursor:pointer; color:var(--muted);}
+  .seg button.on{background:var(--accent-soft); color:var(--accent); font-weight:600;}
+  .hr{height:1px; background:var(--line); margin:14px 0;}
+  .pod{margin-bottom:14px;}
+  .pod .pod-h{font-size:12px; text-transform:uppercase; letter-spacing:.07em; color:var(--muted); margin-bottom:6px; display:flex; justify-content:space-between;}
+  .pod .drop{border:1.5px dashed transparent; border-radius:12px; min-height:14px;}
+  .pod.pickable .drop{border-color:#bcd6d2; background:#f2f7f6; cursor:pointer; padding:6px;}
+  .toast{
+    font-size:13px; background:var(--ink); color:#fff; padding:9px 14px; border-radius:10px;
+    text-align:center; margin-bottom:10px; display:none;
+  }
+  .goalline{display:flex; gap:8px; align-items:flex-start; padding:7px 0; font-size:14px;}
+  .goalline .dot{width:8px; height:8px; border-radius:99px; background:var(--accent); margin-top:7px; flex:0 0 8px;}
+  .fact{font-size:13.5px; padding:6px 0; border-bottom:1px solid #f0efeb;}
+  .fact:last-child{border-bottom:0;}
+
+  /* desktop mock */
+  .desk{
+    width:100%; max-width:1080px; background:var(--card); border:1px solid #d9d6cf; border-radius:18px;
+    box-shadow:0 18px 40px rgba(40,38,34,.10); overflow:hidden;
+  }
+  .desk .d-top{padding:14px 22px; border-bottom:1px solid var(--line); display:flex; gap:18px; align-items:baseline; background:#fdfcfa;}
+  .desk .d-top .brand{font-weight:700; color:var(--accent);}
+  .desk .d-top span{font-size:13px; color:var(--muted);}
+  .d-cols{display:flex; gap:0;}
+  .d-left{width:290px; flex:0 0 290px; border-right:1px solid var(--line); padding:18px; background:#fbfaf8;}
+  .d-grid{flex:1; display:grid; grid-template-columns:repeat(7,1fr); }
+  .d-day{border-right:1px solid #f0efeb; padding:10px 8px; min-height:430px; font-size:11.5px;}
+  .d-day:last-child{border-right:0;}
+  .d-day .dh{font-size:11px; text-transform:uppercase; color:var(--muted); text-align:center; margin-bottom:8px;}
+  .d-day .dh b{display:block; font-size:15px; color:var(--ink);}
+  .d-day.today .dh b{color:var(--accent);}
+  .mini{border-left:3px solid var(--muted); background:#fbfaf8; border:1px solid var(--line); border-left-width:3px;
+        border-radius:8px; padding:5px 7px; margin-bottom:6px;}
+  @media (max-width:900px){
+    .shell{flex-direction:column;}
+    nav.side{position:static; width:100%; height:auto; display:flex; flex-wrap:wrap; gap:4px;}
+    nav.side .grp{width:100%;}
+    main{padding:20px 14px;}
+  }
+</style>
+</head>
+<body>
+<div class="shell">
+  <nav class="side" id="nav">
+    <h1>Bttrme</h1>
+    <div class="sub">Design proposal · Phase 5<br>Sample week: Jul 19–25, 2026</div>
+    <div class="grp">Start here</div>
+    <button data-p="intro" class="on">About this proposal</button>
+    <button data-p="login">1 · Login</button>
+    <div class="grp">Plan</div>
+    <button data-p="week">2 · Weekly overview</button>
+    <button data-p="library">3 · Block library</button>
+    <button data-p="pool">4 · Week pool</button>
+    <button data-p="day">5 · Daily planning</button>
+    <button data-p="edit">6 · Block editing</button>
+    <div class="grp">Do</div>
+    <button data-p="now">7 · Execution view</button>
+    <div class="grp">Reflect</div>
+    <button data-p="eod">8 · End-of-day review</button>
+    <button data-p="weekreview">9 · Weekly review</button>
+    <button data-p="goals">10 · Next week's goals</button>
+    <button data-p="insights">11 · Insights</button>
+    <div class="grp">System</div>
+    <button data-p="calendar">12 · Calendar export</button>
+    <button data-p="desktop">13 · Desktop planning</button>
+  </nav>
+
+  <main>
+
+  <!-- ============ INTRO ============ -->
+  <section class="panel on" id="p-intro">
+    <h2>Bttrme — interaction design proposal</h2>
+    <div class="crumb">Gate 6 deliverable · self-contained · realistic sample data · click anything that looks tappable</div>
+    <div class="notes" style="max-width:720px">
+      <p style="margin-bottom:12px">This prototype shows the twelve required flows as phone-first screens (plus one desktop view for weekly planning). It encodes the approved principles from Phases 1–4:</p>
+      <ul>
+        <li><b>Front-loaded decisions.</b> Every screen the user meets at a heavy moment presents pre-decided context and bounded choices — never open questions.</li>
+        <li><b>Non-judgmental vocabulary, structurally.</b> No red anywhere in the palette. No percentages, streaks, or "overdue." States are <i>completed / not completed / deferred / moved</i>. Grammar rule: facts belong to blocks and weeks, never to "you."</li>
+        <li><b>Honesty is cheap.</b> Skip is one tap with an undo — cheaper than pretending. Recovery from a missed afternoon is two taps.</li>
+        <li><b>Calm surfaces.</b> Warm neutrals, one teal accent, soft category colors on the block's left edge (work · family · personal · health · rest).</li>
+      </ul>
+      <div class="demo"><b>Interactive bits to try:</b> the execution screen's full Start → Done → observation flow and its "time passed" recovery simulation; placing pool blocks in daily planning; closing the day; carry / rephrase / let go on goals; dismissing an insight; regenerating the calendar token.</div>
+    </div>
+    <div class="pager"><button class="primary" data-go="login">Begin: Login →</button></div>
+  </section>
+
+  <!-- ============ 1 LOGIN ============ -->
+  <section class="panel" id="p-login">
+    <h2>1 · Login</h2>
+    <div class="crumb">PRD 01 — the only unauthenticated screen</div>
+    <div class="stage">
+      <div class="phone">
+        <div class="p-body" style="display:flex; flex-direction:column; justify-content:center;">
+          <div style="text-align:center; margin-bottom:26px;">
+            <div style="font-size:30px; font-weight:700; letter-spacing:-.03em; color:var(--accent);">Bttrme</div>
+            <div class="sub2">From intention to action.</div>
+          </div>
+          <div class="card" style="padding:20px 18px;">
+            <div class="field"><label>Username</label><input value="michael"></div>
+            <div class="field"><label>Password</label><input type="password" value="••••••••••"></div>
+            <button class="btn primary" data-go="week">Sign in</button>
+          </div>
+          <div class="sub2" style="text-align:center; margin-top:14px;">Private, single-person app. Sessions last ~30 days.</div>
+        </div>
+      </div>
+      <div class="notes">
+        <h3>Why it looks like this</h3>
+        <ul>
+          <li>No sign-up, no "forgot password" link — a single-user tool shouldn't pretend to be a service. Resets happen out of band.</li>
+          <li>The tagline states the product's one job. No feature tour, no onboarding carousel: the app teaches itself one calm screen at a time.</li>
+          <li>After a rate-limit lockout the message is "Try again in a little while" — plain, no alarm styling.</li>
+        </ul>
+        <div class="demo">Tap <b>Sign in</b> to land on the weekly overview — the returning-user default is Today, but the first visit of a week lands here.</div>
+      </div>
+    </div>
+    <div class="pager"><button data-go="intro">← Back</button><button class="primary" data-go="week">Next: Weekly overview →</button></div>
+  </section>
+
+  <!-- ============ 2 WEEK ============ -->
+  <section class="panel" id="p-week">
+    <h2>2 · Weekly overview</h2>
+    <div class="crumb">PRD 02 + 04 — the week's home: goals, days, pool, load</div>
+    <div class="stage">
+      <div class="phone">
+        <div class="p-top"><span class="brand">Bttrme</span><span class="where">This week · Jul 19–25</span></div>
+        <div class="p-body">
+          <div class="card">
+            <h4>Three goals this week</h4>
+            <div class="goalline"><span class="dot"></span><div>Send the project proposal draft<div class="sub2">3 blocks placed · carried from last week</div></div></div>
+            <div class="goalline"><span class="dot"></span><div>Move three times<div class="sub2">2 blocks placed</div></div></div>
+            <div class="goalline"><span class="dot"></span><div>One screen-free evening with the kids<div class="sub2">1 block placed</div></div></div>
+          </div>
+          <div class="card">
+            <h4>Days</h4>
+            <div style="display:flex; gap:4px; text-align:center; font-size:12px;">
+              <div style="flex:1"><div class="sub2">Sun</div><b>3</b></div>
+              <div style="flex:1; background:var(--accent-soft); border-radius:8px; padding:2px 0;"><div style="color:var(--accent)">Mon</div><b style="color:var(--accent)">5</b></div>
+              <div style="flex:1"><div class="sub2">Tue</div><b>2</b></div>
+              <div style="flex:1"><div class="sub2">Wed</div><b>3</b></div>
+              <div style="flex:1"><div class="sub2">Thu</div><b>2</b></div>
+              <div style="flex:1"><div class="sub2">Fri</div><b>1</b></div>
+              <div style="flex:1"><div class="sub2">Sat</div><b>2</b></div>
+            </div>
+            <div class="sub2" style="margin-top:6px; text-align:center;">blocks placed per day · tap a day to plan it</div>
+          </div>
+          <div class="card" data-go="pool" style="cursor:pointer;">
+            <h4>Week pool</h4>
+            <div style="font-size:14px;">5 blocks not yet placed <span style="color:var(--accent); float:right;">→</span></div>
+          </div>
+          <div class="card">
+            <h4>Load</h4>
+            <div style="font-size:14px;">16h of doing · 3.5h of rest planned</div>
+            <div class="sub2">A comfortable week. Your reference line is 20h.</div>
+          </div>
+          <button class="btn quiet" data-go="insights" style="width:100%;">Before you plan — three things from your data</button>
+        </div>
+        <div class="p-tabs"><span data-go="now">Today</span><span class="on">Week</span><span data-go="library">Library</span><span data-go="weekreview">Review</span></div>
+      </div>
+      <div class="notes">
+        <h3>Why it looks like this</h3>
+        <ul>
+          <li>Goals sit first and stay to three slots — the anti-grandiosity cap is the layout, not a warning dialog.</li>
+          <li>Day counts are plain numbers, not progress rings. A day with zero blocks is a fact, not an empty battery.</li>
+          <li>The load line speaks in hours and words ("a comfortable week"), never a percentage bar. Over the reference it would say "this is a heavy week" — and still block nothing.</li>
+          <li>Insights are reachable from here only (PRD 05): the mirror is offered at planning time, never pushed.</li>
+        </ul>
+        <div class="demo">Tap the <b>pool card</b>, a <b>bottom tab</b>, or the <b>insights button</b> — all navigation here is live.</div>
+      </div>
+    </div>
+    <div class="pager"><button data-go="login">← Back</button><button class="primary" data-go="library">Next: Library →</button></div>
+  </section>
+
+  <!-- ============ 3 LIBRARY ============ -->
+  <section class="panel" id="p-library">
+    <h2>3 · Block library</h2>
+    <div class="crumb">PRD 02 — the slow-changing set of action types, decided once at a calm moment</div>
+    <div class="stage">
+      <div class="phone">
+        <div class="p-top"><span class="brand">Bttrme</span><span class="where">Library</span></div>
+        <div class="p-body">
+          <button class="btn ghost sm" style="width:100%; margin-bottom:12px;">+ New block type</button>
+          <div class="card">
+            <h4>Work</h4>
+            <div class="block b-work"><div class="t">Deep work session · 90m</div><div class="m">Outcome: one meaningful chunk moved forward · First: close email, open the doc, write one sentence</div></div>
+            <div class="block b-work"><div class="t">Email + admin sweep · 30m</div><div class="m">Outcome: inbox handled for today · First: open inbox, newest first</div></div>
+            <div class="block b-work"><div class="t">Prep for weekly sync · 25m</div><div class="m">Outcome: 3 talking points written · First: open last week's notes</div></div>
+          </div>
+          <div class="card">
+            <h4>Family</h4>
+            <div class="block b-family"><div class="t">Screen-free evening · 2h <span class="chip">screen-free</span></div><div class="m">Outcome: present, phone in the drawer · First: put the phone in the drawer</div></div>
+            <div class="block b-family"><div class="t">Homework help · 45m</div><div class="m">Outcome: tomorrow's homework done together · First: ask what's due</div></div>
+          </div>
+          <div class="card">
+            <h4>Health</h4>
+            <div class="block b-health"><div class="t">Gym session · 60m</div><div class="m">Outcome: showed up and moved · First: put on shoes, fill the bottle</div></div>
+            <div class="block b-health"><div class="t">Evening walk · 30m</div><div class="m">Outcome: outside, moving · First: shoes on, out the door</div></div>
+          </div>
+          <div class="card">
+            <h4>Personal</h4>
+            <div class="block b-personal"><div class="t">Reading · 30m</div><div class="m">Outcome: pages read, phone elsewhere · First: book on the couch, phone charging in the kitchen</div></div>
+            <div class="block b-personal"><div class="t">Budget review · 40m</div><div class="m">Outcome: accounts reconciled · First: open the spreadsheet</div></div>
+          </div>
+          <div class="card">
+            <h4>Rest</h4>
+            <div class="block b-rest"><div class="t">Do-nothing break · 20m <span class="chip">screen-free</span></div><div class="m">Outcome: sat on the balcony, no phone · First: leave the phone inside</div></div>
+            <div class="block b-rest"><div class="t">Guitar noodling · 25m</div><div class="m">Outcome: played, no goal · First: take the guitar off the wall</div></div>
+          </div>
+          <div class="sub2" style="text-align:center;">Archived block types (2)</div>
+        </div>
+        <div class="p-tabs"><span data-go="now">Today</span><span data-go="week">Week</span><span class="on">Library</span><span data-go="weekreview">Review</span></div>
+      </div>
+      <div class="notes">
+        <h3>Why it looks like this</h3>
+        <ul>
+          <li>Each template already answers the execution moment's questions: outcome and <b>first physical action</b> are required fields, written once, at a calm moment (PRD 02 FR-1).</li>
+          <li>Outcomes are deliberately modest — "showed up and moved," "played, no goal." The library teaches what success means before any week is planned.</li>
+          <li>Rest has its own category and its own templates, seeded from day one — rest is something you can plan, not leftover time.</li>
+          <li>Expected size: 10–25 types. There is no search bar on purpose; needing one would mean the library became a task list.</li>
+        </ul>
+      </div>
+    </div>
+    <div class="pager"><button data-go="week">← Back</button><button class="primary" data-go="pool">Next: Week pool →</button></div>
+  </section>
+
+  <!-- ============ 4 POOL ============ -->
+  <section class="panel" id="p-pool">
+    <h2>4 · Current week's pool</h2>
+    <div class="crumb">PRD 02 — blocks chosen for this week, not yet placed on days</div>
+    <div class="stage">
+      <div class="phone">
+        <div class="p-top"><span class="brand">Bttrme</span><span class="where">Pool · Jul 19–25</span></div>
+        <div class="p-body">
+          <div class="sub2" style="margin-bottom:10px;">These are in your week but not yet on a day. Tap one to place it.</div>
+          <div class="block b-work" data-go="day"><div class="t">Deep work session · 90m</div><div class="m">Serves: send the proposal draft</div></div>
+          <div class="block b-family" data-go="day"><div class="t">Homework help · 45m</div></div>
+          <div class="block b-personal" data-go="day"><div class="t">Budget review · 40m</div></div>
+          <div class="block b-rest" data-go="day"><div class="t">Do-nothing break · 20m</div></div>
+          <div class="block b-health" data-go="day"><div class="t">Evening walk · 30m</div><div class="m">Serves: move three times</div></div>
+          <div class="hr"></div>
+          <button class="btn ghost sm" data-go="library" style="width:100%;">+ Add from library</button>
+          <button class="btn ghost sm" style="width:100%; margin-top:8px;">+ One-off block</button>
+          <div class="card" style="margin-top:14px;">
+            <h4>Load</h4>
+            <div style="font-size:14px;">Placed + pool: 19.5h of doing</div>
+            <div class="sub2">Close to your reference line. Placing everything would make this a full week.</div>
+          </div>
+        </div>
+        <div class="p-tabs"><span data-go="now">Today</span><span class="on">Week</span><span data-go="library">Library</span><span data-go="weekreview">Review</span></div>
+      </div>
+      <div class="notes">
+        <h3>Why it looks like this</h3>
+        <ul>
+          <li>The pool is the bounded middle layer between library (all the kinds of things I do) and days (what I'll do when). Keeping it visible as its own place is a Phase 5 requirement.</li>
+          <li>Blocks that serve a weekly goal say so — the "why" travels with the block from here to the execution card.</li>
+          <li>One-off blocks are created <i>here</i>, not in the library — errands don't become permanent "types."</li>
+          <li>Blocks left in the pool at week's end simply expire and show up in the weekly review as "planned but never scheduled" — no debt rolls forward.</li>
+        </ul>
+        <div class="demo">Tap any pool block to jump into daily planning.</div>
+      </div>
+    </div>
+    <div class="pager"><button data-go="library">← Back</button><button class="primary" data-go="day">Next: Daily planning →</button></div>
+  </section>
+
+  <!-- ============ 5 DAY ============ -->
+  <section class="panel" id="p-day">
+    <h2>5 · Daily planning</h2>
+    <div class="crumb">PRD 03 — placing blocks into parts of day; exact times optional</div>
+    <div class="stage">
+      <div class="phone">
+        <div class="p-top"><span class="brand">Bttrme</span><span class="where">Monday · Jul 20</span></div>
+        <div class="p-body">
+          <div class="toast" id="day-toast">Placed. Move it anytime.</div>
+          <div class="pod" data-pod="morning">
+            <div class="pod-h"><span>Morning</span><span>~3h planned</span></div>
+            <div class="block b-work"><div class="t">Deep work session · 90m · 9:00</div><div class="m">Serves: send the proposal draft</div></div>
+            <div class="block b-work"><div class="t">Email + admin sweep · 30m</div></div>
+            <div class="drop"></div>
+          </div>
+          <div class="pod" data-pod="afternoon">
+            <div class="pod-h"><span>Afternoon</span><span>~25m planned</span></div>
+            <div class="block b-work"><div class="t">Prep for weekly sync · 25m</div></div>
+            <div class="drop"></div>
+          </div>
+          <div class="pod" data-pod="evening">
+            <div class="pod-h"><span>Evening</span><span>~1.5h planned</span></div>
+            <div class="block b-health"><div class="t">Gym session · 60m · 18:30</div><div class="m">Serves: move three times</div></div>
+            <div class="block b-personal"><div class="t">Reading · 30m</div></div>
+            <div class="drop"></div>
+          </div>
+          <div class="hr"></div>
+          <div class="card" id="day-pool">
+            <h4>From the pool — tap, then tap a part of day</h4>
+            <div class="block b-family" data-pick="Homework help · 45m" data-cls="b-family"><div class="t">Homework help · 45m</div></div>
+            <div class="block b-rest" data-pick="Do-nothing break · 20m" data-cls="b-rest"><div class="t">Do-nothing break · 20m</div></div>
+            <div class="block b-health" data-pick="Evening walk · 30m" data-cls="b-health"><div class="t">Evening walk · 30m</div></div>
+          </div>
+        </div>
+        <div class="p-tabs"><span data-go="now">Today</span><span class="on">Week</span><span data-go="library">Library</span><span data-go="weekreview">Review</span></div>
+      </div>
+      <div class="notes">
+        <h3>Why it looks like this</h3>
+        <ul>
+          <li>The day is three shelves, not 24 slots. Parts of day are the default granularity (Phase 1 hypothesis); an exact time like "9:00" is an optional extra on the block, not a grid you must fill.</li>
+          <li>Placing is tap-tap: pick a block, pick a shelf. Two taps, matching the ≤2-tap move requirement (PRD 03 FR-1).</li>
+          <li>Per-shelf load reads in plain time ("~3h planned"). An empty shelf carries no styling that suggests it should be filled.</li>
+          <li>This same screen is where a block is moved between days later — moving is planning, not an apology.</li>
+        </ul>
+        <div class="demo"><b>Try it:</b> tap a pool block below the line, then tap a highlighted part of day.</div>
+      </div>
+    </div>
+    <div class="pager"><button data-go="pool">← Back</button><button class="primary" data-go="edit">Next: Block editing →</button></div>
+  </section>
+
+  <!-- ============ 6 EDIT ============ -->
+  <section class="panel" id="p-edit">
+    <h2>6 · Block editing</h2>
+    <div class="crumb">PRD 02/03 — everything about one block, edited at a calm moment</div>
+    <div class="stage">
+      <div class="phone">
+        <div class="p-top"><span class="brand">Bttrme</span><span class="where">Edit block</span></div>
+        <div class="p-body">
+          <div class="card">
+            <div class="field"><label>Name</label><input value="Gym session"></div>
+            <div class="field"><label>Category</label>
+              <div class="seg"><button>Work</button><button>Family</button><button>Personal</button><button class="on">Health</button><button>Rest</button></div>
+            </div>
+            <div class="field"><label>Duration</label><input value="60 minutes"></div>
+            <div class="field"><label>Expected outcome — what counts as done</label><textarea rows="2">Showed up and moved. Any session counts.</textarea></div>
+            <div class="field"><label>First action</label><textarea rows="2">Put on shoes, fill the water bottle.</textarea></div>
+          </div>
+          <div class="card">
+            <h4>When</h4>
+            <div class="field"><label>Day</label>
+              <div class="seg"><button>Sun</button><button class="on">Mon</button><button>Tue</button><button>Wed</button><button>Thu</button><button>Fri</button><button>Sat</button></div>
+            </div>
+            <div class="field"><label>Part of day</label>
+              <div class="seg"><button>Morning</button><button>Afternoon</button><button class="on">Evening</button></div>
+            </div>
+            <div class="field"><label>Exact time (optional)</label><input value="18:30"></div>
+            <div class="field"><label>Serves a weekly goal (optional)</label>
+              <select><option>Move three times</option><option>Send the project proposal draft</option><option>Screen-free evening with the kids</option><option>—</option></select>
+            </div>
+          </div>
+          <button class="btn primary" data-go="day">Save</button>
+          <button class="btn ghost sm" style="width:100%; margin-top:8px;">Move back to pool</button>
+          <button class="btn ghost sm" style="width:100%; margin-top:8px; color:var(--muted);">Remove from this week</button>
+        </div>
+        <div class="p-tabs"><span data-go="now">Today</span><span class="on">Week</span><span data-go="library">Library</span><span data-go="weekreview">Review</span></div>
+      </div>
+      <div class="notes">
+        <h3>Why it looks like this</h3>
+        <ul>
+          <li>One sheet holds both <i>what</i> (copied from the template, freely editable per-instance) and <i>when</i> — dates, part of day, optional exact time (Phase 5 requirement: "clear editing of dates, times, duration, expected outcome").</li>
+          <li>The outcome field's label teaches its own philosophy: "what counts as done." The sample text — "any session counts" — is the anti-perfectionism principle in the data itself.</li>
+          <li>The goal link is one optional dropdown, defaulting to none: the "why" is offered, never demanded (Phase 4 open question 1, resolved).</li>
+          <li>"Remove from this week" is quiet and grey — removal is allowed, styled as an ordinary act, and preserved as history underneath.</li>
+        </ul>
+      </div>
+    </div>
+    <div class="pager"><button data-go="day">← Back</button><button class="primary" data-go="now">Next: Execution view →</button></div>
+  </section>
+
+  <!-- ============ 7 NOW ============ -->
+  <section class="panel" id="p-now">
+    <h2>7 · In-the-moment execution view</h2>
+    <div class="crumb">PRD 03 — the heart of the product: full context, four answers, no questions</div>
+    <div class="stage">
+      <div class="phone">
+        <div class="p-top"><span class="brand">Bttrme</span><span class="where">Today · Mon Jul 20</span></div>
+        <div class="p-body" id="now-body">
+
+          <!-- state: idle -->
+          <div class="now-state" id="now-idle">
+            <div class="toast" id="skip-toast">Noted as not completed. <a href="#" id="skip-undo" style="color:#fff; text-decoration:underline;">Undo</a></div>
+            <div class="sub2" style="margin-bottom:8px;">Evening · next up</div>
+            <div class="card" style="border-left:4px solid var(--health); padding:18px 16px;">
+              <div class="h-big">Gym session</div>
+              <div class="sub2" style="margin-bottom:12px;">60 minutes · 18:30 · serves “Move three times”</div>
+              <div style="font-size:13.5px; margin-bottom:4px; color:var(--muted);">Counts as done</div>
+              <div style="font-size:15px; margin-bottom:12px;">Showed up and moved. Any session counts.</div>
+              <div style="background:var(--accent-soft); border-radius:10px; padding:10px 12px; margin-bottom:16px;">
+                <div style="font-size:12px; text-transform:uppercase; letter-spacing:.06em; color:var(--accent); margin-bottom:2px;">First action</div>
+                <div style="font-size:15.5px; font-weight:600;">Put on shoes, fill the water bottle.</div>
+              </div>
+              <button class="btn primary" id="btn-start">Start</button>
+              <div class="row" style="margin-top:8px;">
+                <button class="btn ghost sm">Later today</button>
+                <button class="btn ghost sm">Another day</button>
+                <button class="btn ghost sm" id="btn-skip">Skip</button>
+              </div>
+            </div>
+            <div class="sub2" style="margin-bottom:6px;">Then</div>
+            <div class="block b-personal"><div class="t">Reading · 30m</div></div>
+            <div class="sub2" style="text-align:center; margin-top:14px;"><a href="#" id="btn-escape">escape happened</a></div>
+          </div>
+
+          <!-- state: active -->
+          <div class="now-state" id="now-active" style="display:none;">
+            <div class="sub2" style="margin-bottom:8px;">In progress</div>
+            <div class="card" style="border-left:4px solid var(--health); padding:18px 16px;">
+              <div class="h-big">Gym session</div>
+              <div class="sub2" style="margin-bottom:14px;">18 minutes in · planned 60</div>
+              <div style="font-size:15px; margin-bottom:16px;">Showed up and moved. Any session counts.</div>
+              <button class="btn primary" id="btn-done">Done</button>
+              <button class="btn quiet" id="btn-partial" style="width:100%; margin-top:8px;">Stopped early — still counts</button>
+            </div>
+          </div>
+
+          <!-- state: closeout -->
+          <div class="now-state" id="now-closeout" style="display:none;">
+            <div class="card" style="border-left:4px solid var(--health); padding:18px 16px; text-align:center;">
+              <div class="h-big" style="margin-bottom:2px;">Noted.</div>
+              <div class="sub2" id="closeout-line" style="margin-bottom:14px;">Gym session — completed.</div>
+              <div style="text-align:left;">
+                <div class="sub2" style="margin-bottom:6px;">If you feel like it (one tap, or just move on):</div>
+                <div style="font-size:13px; margin-bottom:4px;">Starting felt</div>
+                <div class="seg obs" style="margin-bottom:10px;"><button>Light</button><button>Medium</button><button>Heavy</button></div>
+                <div style="font-size:13px; margin-bottom:4px;">Energy now</div>
+                <div class="seg obs"><button>Better</button><button>Same</button><button>Worse</button></div>
+              </div>
+              <button class="btn quiet" id="btn-nextblock" style="width:100%; margin-top:16px;">Next: Reading →</button>
+            </div>
+          </div>
+
+          <!-- state: recovery -->
+          <div class="now-state" id="now-recover" style="display:none;">
+            <div class="sub2" style="margin-bottom:8px;">Earlier today</div>
+            <div class="card">
+              <div style="font-size:15px; margin-bottom:12px;">These blocks' time passed.</div>
+              <div class="block b-work"><div class="t">Prep for weekly sync · 25m</div>
+                <div class="row" style="margin-top:8px;"><button class="btn ghost sm">This evening</button><button class="btn ghost sm">Another day</button><button class="btn ghost sm">Skip</button></div>
+              </div>
+              <button class="btn quiet sm" id="btn-skipall" style="width:100%; margin-top:6px;">Skip all for today</button>
+            </div>
+            <div class="sub2" style="margin-bottom:6px;">This evening — unchanged</div>
+            <div class="block b-health"><div class="t">Gym session · 60m · 18:30</div></div>
+            <div class="block b-personal"><div class="t">Reading · 30m</div></div>
+          </div>
+
+        </div>
+        <div class="p-tabs"><span class="on">Today</span><span data-go="week">Week</span><span data-go="library">Library</span><span data-go="eod">Review</span></div>
+      </div>
+      <div class="notes">
+        <h3>Why it looks like this</h3>
+        <ul>
+          <li>The card answers every question the negotiating mind will raise — what, how long, why today, what counts as done — and makes the <b>first action</b> the visually loudest element. The bar to clear is "put on shoes," not "gym."</li>
+          <li>Exactly four responses. Skip is one tap with an undo toast instead of a confirm dialog: honesty costs less than pretending (PRD 03 FR-9).</li>
+          <li>"Stopped early — still counts" is a first-class completion, not a lesser one.</li>
+          <li>Observations appear only <i>after</i> closing, clearly optional, and skippable by simply moving on — zero added taps on the happy path (PRD 05).</li>
+          <li>The recovery state has no red, no counts, no "you missed": the untouched evening is shown beneath it, unchanged — the day continues from now.</li>
+          <li>"escape happened" is a quiet text link, present but never prominent — and the current block sits right above it, one tap from Start. The logger doubles as a re-entry ramp.</li>
+        </ul>
+        <div class="demo"><b>Try the flow:</b> Start → Done (or Stopped early) → optional observations. Then <button class="btn ghost sm" id="btn-simrecover">Simulate: opened at 17:40, afternoon untouched</button></div>
+      </div>
+    </div>
+    <div class="pager"><button data-go="edit">← Back</button><button class="primary" data-go="eod">Next: End-of-day review →</button></div>
+  </section>
+
+  <!-- ============ 8 EOD ============ -->
+  <section class="panel" id="p-eod">
+    <h2>8 · End-of-day review</h2>
+    <div class="crumb">PRD 04 — derived, one tap, under a minute, skippable without trace</div>
+    <div class="stage">
+      <div class="phone">
+        <div class="p-top"><span class="brand">Bttrme</span><span class="where">Closing Monday</span></div>
+        <div class="p-body" id="eod-body">
+          <div id="eod-open">
+            <div class="card">
+              <h4>Monday, as it happened</h4>
+              <div class="fact">Deep work session <span class="chip done" style="float:right;">completed</span></div>
+              <div class="fact">Email + admin sweep <span class="chip done" style="float:right;">completed</span></div>
+              <div class="fact">Prep for weekly sync <span class="chip" style="float:right;">moved to Tuesday</span></div>
+              <div class="fact">Gym session <span class="chip done" style="float:right;">completed</span></div>
+              <div class="fact">Reading <span class="chip" style="float:right;">not completed</span></div>
+            </div>
+            <div class="field"><label>Anything worth noting? (optional)</label><input placeholder="One line, or leave empty"></div>
+            <button class="btn primary" id="btn-closeday">Close the day</button>
+            <div class="sub2" style="text-align:center; margin-top:10px;">Or just close the app. Skipping this leaves no trace.</div>
+          </div>
+          <div id="eod-done" style="display:none; text-align:center; padding-top:80px;">
+            <div class="h-big" style="margin-bottom:6px;">Day closed.</div>
+            <div class="sub2">4 completed · 1 moved · 1 not completed<br>See you tomorrow.</div>
+            <button class="btn quiet sm" data-go="weekreview" style="margin-top:24px;">On to the weekly review →</button>
+          </div>
+        </div>
+        <div class="p-tabs"><span data-go="now">Today</span><span data-go="week">Week</span><span data-go="library">Library</span><span class="on">Review</span></div>
+      </div>
+      <div class="notes">
+        <h3>Why it looks like this</h3>
+        <ul>
+          <li>Everything above the note field is <b>derived</b> — the user confirms a picture, he doesn't fill out a form. One tap plus optional one line keeps it under 60 seconds.</li>
+          <li>"Moved to Tuesday" and "not completed" wear the same quiet grey chip as each other. Auto-closed blocks and chosen skips are phrased identically — the system never distinguishes "gave up" from "chose not to."</li>
+          <li>The skip affordance is written into the screen itself: "just close the app." No streak exists to protect.</li>
+          <li>The closing line counts facts, never ratios — "4 completed · 1 moved," not "67%."</li>
+        </ul>
+        <div class="demo">Tap <b>Close the day</b>.</div>
+      </div>
+    </div>
+    <div class="pager"><button data-go="now">← Back</button><button class="primary" data-go="weekreview">Next: Weekly review →</button></div>
+  </section>
+
+  <!-- ============ 9 WEEK REVIEW ============ -->
+  <section class="panel" id="p-weekreview">
+    <h2>9 · Weekly review</h2>
+    <div class="crumb">PRD 04 — the week as information; reviewing last week (Jul 12–18)</div>
+    <div class="stage">
+      <div class="phone">
+        <div class="p-top"><span class="brand">Bttrme</span><span class="where">Week of Jul 12–18</span></div>
+        <div class="p-body">
+          <div class="card">
+            <h4>The week's goals</h4>
+            <div class="fact"><b>Send the project proposal draft</b><br><span class="sub2">3 blocks: 2 completed, 1 not completed · draft not yet sent</span></div>
+            <div class="fact"><b>Move three times</b><br><span class="sub2">3 blocks: 3 completed</span></div>
+            <div class="fact"><b>Read before sleep, 4 nights</b><br><span class="sub2">4 blocks: 2 completed, 2 not completed</span></div>
+          </div>
+          <div class="card">
+            <h4>By category</h4>
+            <div class="fact">Work — planned 9h · completed 7h</div>
+            <div class="fact">Health — planned 3h · completed 3h</div>
+            <div class="fact">Family — planned 4h · completed 4h</div>
+            <div class="fact">Personal — planned 2.5h · completed 1h</div>
+            <div class="fact">Rest — planned 2h · completed 1.5h</div>
+          </div>
+          <div class="card">
+            <h4>Worth seeing</h4>
+            <div class="fact">3 blocks were moved out of Tuesday evening.</div>
+            <div class="fact">Planned but never scheduled: Budget review (40m).</div>
+            <div class="fact">Both misses of “Reading” followed evenings with 3+ blocks.</div>
+          </div>
+          <div class="field"><label>What worked?</label><textarea rows="2">Morning deep work before email. Three for three at the gym.</textarea></div>
+          <div class="field"><label>What was heavy?</label><textarea rows="2">Tuesday evening — everything after dinner got moved.</textarea></div>
+          <div class="field"><label>What should change in the planning?</label><textarea rows="2">Stop planning more than one thing after 20:00.</textarea></div>
+          <button class="btn primary" data-go="goals">Continue: goals for next week →</button>
+        </div>
+        <div class="p-tabs"><span data-go="now">Today</span><span data-go="week">Week</span><span data-go="library">Library</span><span class="on">Review</span></div>
+      </div>
+      <div class="notes">
+        <h3>Why it looks like this</h3>
+        <ul>
+          <li>Facts first, in the approved grammar — "3 blocks were moved out of Tuesday evening," never "you avoided Tuesday." Blocks and weeks do things; the user is never the subject of a verdict sentence.</li>
+          <li>Hours planned vs. completed are shown as plain pairs, not bars or percentages — close enough to compare, too dull to gamify.</li>
+          <li>The third prompt is the whole product in one question: what should change <i>in the planning</i> — not in you. Its answer becomes next week's visible planning note.</li>
+          <li>A week with zero blocks renders one gentle sentence and goes straight to goals — that screen is specified as the gentlest in the product (PRD 04 §9).</li>
+        </ul>
+      </div>
+    </div>
+    <div class="pager"><button data-go="eod">← Back</button><button class="primary" data-go="goals">Next: Next week's goals →</button></div>
+  </section>
+
+  <!-- ============ 10 GOALS ============ -->
+  <section class="panel" id="p-goals">
+    <h2>10 · Three goals for next week</h2>
+    <div class="crumb">PRD 04 — carry, rephrase, or let go; the thread between weeks</div>
+    <div class="stage">
+      <div class="phone">
+        <div class="p-top"><span class="brand">Bttrme</span><span class="where">Next week · Jul 19–25</span></div>
+        <div class="p-body">
+          <div class="sub2" style="margin-bottom:10px;">Last week's goals — choose what happens to each:</div>
+          <div class="card goalcard">
+            <div style="font-size:15px; margin-bottom:8px;">Send the project proposal draft</div>
+            <div class="seg carry"><button class="on">Carry</button><button>Rephrase</button><button>Let go</button></div>
+            <div class="sub2 carrymsg" style="margin-top:6px;">Comes along as-is · week 2 of this goal</div>
+          </div>
+          <div class="card goalcard">
+            <div style="font-size:15px; margin-bottom:8px;">Move three times</div>
+            <div class="seg carry"><button class="on">Carry</button><button>Rephrase</button><button>Let go</button></div>
+            <div class="sub2 carrymsg" style="margin-top:6px;">Comes along as-is</div>
+          </div>
+          <div class="card goalcard">
+            <div style="font-size:15px; margin-bottom:8px;">Read before sleep, 4 nights</div>
+            <div class="seg carry"><button>Carry</button><button class="on">Rephrase</button><button>Let go</button></div>
+            <div class="field" style="margin-top:8px; margin-bottom:0;"><input value="One screen-free evening with the kids"></div>
+          </div>
+          <div class="card" style="border-style:dashed; color:var(--muted); text-align:center; font-size:14px;">+ a new goal (1 slot left)</div>
+          <div class="card">
+            <h4>Your planning note, coming with you</h4>
+            <div style="font-size:14px;">“Stop planning more than one thing after 20:00.”</div>
+          </div>
+          <button class="btn primary" data-go="week">Start next week</button>
+        </div>
+        <div class="p-tabs"><span data-go="now">Today</span><span data-go="week">Week</span><span data-go="library">Library</span><span class="on">Review</span></div>
+      </div>
+      <div class="notes">
+        <h3>Why it looks like this</h3>
+        <ul>
+          <li>Three verbs, none judgmental: <b>carry / rephrase / let go</b>. "Let go" is a decision, not an admission — there is no "failed" path out of a goal.</li>
+          <li>Lineage is visible but gentle: "week 2 of this goal." Whether long lineage deserves an insight ("smaller blocks?") is decided in the insights module, never here.</li>
+          <li>The cap is the interface again: slots, not warnings. Carrying two + rephrasing one leaves exactly one free slot.</li>
+          <li>The planning note rides along in its own card — last week's learning physically enters next week's planning screen (PRD 04 FR-12).</li>
+        </ul>
+        <div class="demo"><b>Try it:</b> switch a goal between carry / rephrase / let go.</div>
+      </div>
+    </div>
+    <div class="pager"><button data-go="weekreview">← Back</button><button class="primary" data-go="insights">Next: Insights →</button></div>
+  </section>
+
+  <!-- ============ 11 INSIGHTS ============ -->
+  <section class="panel" id="p-insights">
+    <h2>11 · Insights</h2>
+    <div class="crumb">PRD 05 — the mirror: sentences, not charts; reachable only from weekly planning</div>
+    <div class="stage">
+      <div class="phone">
+        <div class="p-top"><span class="brand">Bttrme</span><span class="where">Before you plan</span></div>
+        <div class="p-body">
+          <div class="sub2" style="margin-bottom:12px;">From your last 4 weeks. Patterns belong to blocks and weeks — never to you.</div>
+          <div class="card ins">
+            <div style="font-size:14.5px; margin-bottom:8px;">Blocks of 30 minutes or less were started far more often than 90-minute blocks. Splitting long blocks may help.</div>
+            <button class="btn ghost sm dismiss">Not useful</button>
+          </div>
+          <div class="card ins">
+            <div style="font-size:14.5px; margin-bottom:8px;">Evening blocks were moved or not completed in 3 of the last 4 weeks. Consider planning lighter evenings.</div>
+            <button class="btn ghost sm dismiss">Not useful</button>
+          </div>
+          <div class="card ins">
+            <div style="font-size:14.5px; margin-bottom:8px;">Gym blocks were followed by “energy: better” in 5 of 6 observations.</div>
+            <button class="btn ghost sm dismiss">Not useful</button>
+          </div>
+          <div class="card ins">
+            <div style="font-size:14.5px; margin-bottom:8px;">Do-nothing breaks were marked restorative 4 times out of 5. Evening scrolling was not marked restorative once.</div>
+            <button class="btn ghost sm dismiss">Not useful</button>
+          </div>
+          <div class="card ins">
+            <div style="font-size:14.5px; margin-bottom:8px;">“Send the project proposal draft” is in its second week. The completed blocks for it were the morning ones.</div>
+            <button class="btn ghost sm dismiss">Not useful</button>
+          </div>
+          <button class="btn primary" data-go="week" style="margin-top:4px;">Plan the week →</button>
+        </div>
+        <div class="p-tabs"><span data-go="now">Today</span><span class="on">Week</span><span data-go="library">Library</span><span data-go="weekreview">Review</span></div>
+      </div>
+      <div class="notes">
+        <h3>Why it looks like this</h3>
+        <ul>
+          <li>Five hand-written sentence templates filled with the user's parameters — no charts, because a chart invites score-reading; no free-form generated text, because phrasing is a safety surface here.</li>
+          <li>Every sentence pairs an observation with an optional planning suggestion, and ends pointing forward: "Plan the week →". The mirror exists to improve the <i>next</i> plan, not to grade the last one.</li>
+          <li>"Not useful" suppresses that template for a month — the user curates his own mirror (PRD 05 FR-8). All-dismissed leaves a quiet empty panel, not a plea for engagement.</li>
+          <li>No badge, no unread count, no home-screen entry. If he never taps into this screen, it never follows him.</li>
+        </ul>
+        <div class="demo"><b>Try it:</b> dismiss an insight.</div>
+      </div>
+    </div>
+    <div class="pager"><button data-go="goals">← Back</button><button class="primary" data-go="calendar">Next: Calendar export →</button></div>
+  </section>
+
+  <!-- ============ 12 CALENDAR ============ -->
+  <section class="panel" id="p-calendar">
+    <h2>12 · Calendar export</h2>
+    <div class="crumb">PRD 06 — a private ICS feed into the calendar he already lives in</div>
+    <div class="stage">
+      <div class="phone">
+        <div class="p-top"><span class="brand">Bttrme</span><span class="where">Settings · Calendar</span></div>
+        <div class="p-body">
+          <div class="card">
+            <h4>Your private feed</h4>
+            <div style="font-family:ui-monospace,monospace; font-size:12px; background:#f5f4f1; border-radius:8px; padding:10px 12px; word-break:break-all; margin-bottom:10px;" id="feed-url">
+              https://bttrme.app/calendar/kx7…q2f.ics
+            </div>
+            <div class="row">
+              <button class="btn quiet sm">Copy link</button>
+              <button class="btn ghost sm" id="btn-regen">Regenerate</button>
+            </div>
+            <div class="sub2" style="margin-top:8px;">Regenerating kills the old link instantly. Anyone with the old URL sees nothing.</div>
+          </div>
+          <div class="card">
+            <h4>What the calendar shows</h4>
+            <div class="seg" style="margin-bottom:8px;"><button class="on">Names only</button><button>Names + outcomes</button></div>
+            <div class="sub2">First actions and notes never leave Bttrme. Completion states are never exported — the calendar sees the plan, not the record. Rest blocks are included.</div>
+          </div>
+          <div class="card">
+            <h4>Connect</h4>
+            <div class="fact"><b>Apple Calendar</b> — Settings → Add subscription → paste the link.</div>
+            <div class="fact"><b>Google Calendar</b> — Other calendars → From URL → paste the link.</div>
+            <div class="fact sub2">Google refreshes subscribed feeds on its own schedule — sometimes hours. Your phone's calendar updates faster.</div>
+          </div>
+          <div class="card">
+            <h4>Your data</h4>
+            <div class="fact">Last automatic backup: tonight, 03:12 <span class="chip done" style="float:right;">ok</span></div>
+            <button class="btn ghost sm" style="width:100%; margin-top:8px;">Export all my data (JSON)</button>
+          </div>
+        </div>
+        <div class="p-tabs"><span data-go="now">Today</span><span data-go="week">Week</span><span data-go="library">Library</span><span data-go="weekreview">Review</span></div>
+      </div>
+      <div class="notes">
+        <h3>Why it looks like this</h3>
+        <ul>
+          <li>Subscription, not sync: no OAuth, no permissions dialogs, no second source of truth. The feed shows the plan forward — completed/missed states stay home (PRD 06 FR-3/FR-4).</li>
+          <li>The privacy model is explained in one breath where the choice is made: names only by default; first actions never exported; regeneration as the leak response.</li>
+          <li>The refresh-lag caveat is stated at setup, in plain words, so a slow Google refresh reads as "Google," not "broken."</li>
+          <li>Backup status lives here too — the one place the app is allowed to warn is about its own care of your data.</li>
+        </ul>
+        <div class="demo"><b>Try it:</b> regenerate the feed token.</div>
+      </div>
+    </div>
+    <div class="pager"><button data-go="insights">← Back</button><button class="primary" data-go="desktop">Next: Desktop planning →</button></div>
+  </section>
+
+  <!-- ============ 13 DESKTOP ============ -->
+  <section class="panel" id="p-desktop">
+    <h2>13 · Weekly planning on desktop</h2>
+    <div class="crumb">Same product, wider posture — where the deeper Sunday planning session happens</div>
+    <div class="stage" style="flex-direction:column;">
+      <div class="desk">
+        <div class="d-top"><span class="brand">Bttrme</span><span>This week · Jul 19–25, 2026</span><span style="margin-left:auto;">Library · Review · Settings</span></div>
+        <div class="d-cols">
+          <div class="d-left">
+            <div class="card" style="margin-bottom:10px;">
+              <h4>Goals</h4>
+              <div class="goalline"><span class="dot"></span><div style="font-size:13.5px;">Send the project proposal draft</div></div>
+              <div class="goalline"><span class="dot"></span><div style="font-size:13.5px;">Move three times</div></div>
+              <div class="goalline"><span class="dot"></span><div style="font-size:13.5px;">One screen-free evening with the kids</div></div>
+            </div>
+            <div class="card" style="margin-bottom:10px;">
+              <h4>Planning note from last week</h4>
+              <div style="font-size:13px;">“Stop planning more than one thing after 20:00.”</div>
+            </div>
+            <div class="card">
+              <h4>Pool — drag onto a day</h4>
+              <div class="mini" style="border-left-color:var(--work);">Deep work session · 90m</div>
+              <div class="mini" style="border-left-color:var(--family);">Homework help · 45m</div>
+              <div class="mini" style="border-left-color:var(--personal);">Budget review · 40m</div>
+              <div class="mini" style="border-left-color:var(--rest);">Do-nothing break · 20m</div>
+              <div class="mini" style="border-left-color:var(--health);">Evening walk · 30m</div>
+              <div class="sub2" style="margin-top:8px;">16h of doing · 3.5h of rest · comfortable</div>
+            </div>
+          </div>
+          <div class="d-grid">
+            <div class="d-day"><div class="dh">Sun<b>19</b></div>
+              <div class="mini" style="border-left-color:var(--work);">Deep work · 90m</div>
+              <div class="mini" style="border-left-color:var(--family);">Screen-free evening</div>
+              <div class="mini" style="border-left-color:var(--rest);">Guitar · 25m</div>
+            </div>
+            <div class="d-day today"><div class="dh">Mon<b>20</b></div>
+              <div class="mini" style="border-left-color:var(--work);">Deep work · 9:00</div>
+              <div class="mini" style="border-left-color:var(--work);">Email sweep</div>
+              <div class="mini" style="border-left-color:var(--work);">Sync prep</div>
+              <div class="mini" style="border-left-color:var(--health);">Gym · 18:30</div>
+              <div class="mini" style="border-left-color:var(--personal);">Reading</div>
+            </div>
+            <div class="d-day"><div class="dh">Tue<b>21</b></div>
+              <div class="mini" style="border-left-color:var(--work);">Deep work · 90m</div>
+              <div class="mini" style="border-left-color:var(--family);">Homework help</div>
+            </div>
+            <div class="d-day"><div class="dh">Wed<b>22</b></div>
+              <div class="mini" style="border-left-color:var(--work);">Email sweep</div>
+              <div class="mini" style="border-left-color:var(--health);">Gym · 18:30</div>
+              <div class="mini" style="border-left-color:var(--rest);">Do-nothing · 20m</div>
+            </div>
+            <div class="d-day"><div class="dh">Thu<b>23</b></div>
+              <div class="mini" style="border-left-color:var(--work);">Deep work · 90m</div>
+              <div class="mini" style="border-left-color:var(--personal);">Reading</div>
+            </div>
+            <div class="d-day"><div class="dh">Fri<b>24</b></div>
+              <div class="mini" style="border-left-color:var(--family);">Screen-free evening</div>
+            </div>
+            <div class="d-day"><div class="dh">Sat<b>25</b></div>
+              <div class="mini" style="border-left-color:var(--health);">Evening walk</div>
+              <div class="mini" style="border-left-color:var(--rest);">Guitar · 25m</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="notes" style="max-width:720px;">
+        <h3>Why it looks like this</h3>
+        <ul>
+          <li>Desktop earns its width at exactly one job: the Sunday session. Goals, last week's planning note, and the pool sit on the left; the seven days stretch right — pool→day movement becomes drag-and-drop where the phone uses tap-tap.</li>
+          <li>It is the same application and the same three-layer model (library / pool / days), not a second product. Everything else — execution, reviews, recovery — stays phone-shaped even on a big screen, centered in a column.</li>
+          <li>Days show stacked blocks in part-of-day order without hour gridlines: the calendar-app look is deliberately avoided, because Bttrme is not where meetings live.</li>
+        </ul>
+      </div>
+    </div>
+    <div class="pager"><button data-go="calendar">← Back</button><button class="primary" data-go="intro">Back to start</button></div>
+  </section>
+
+  </main>
+</div>
+
+<script>
+  // ---------- navigation ----------
+  function go(id){
+    document.querySelectorAll('.panel').forEach(p=>p.classList.remove('on'));
+    var t=document.getElementById('p-'+id); if(t) t.classList.add('on');
+    document.querySelectorAll('nav.side button').forEach(b=>b.classList.toggle('on', b.dataset.p===id));
+    window.scrollTo({top:0});
+  }
+  document.addEventListener('click', function(e){
+    var el=e.target.closest('[data-go]');
+    if(el){ e.preventDefault(); go(el.dataset.go); return; }
+    var nb=e.target.closest('nav.side button');
+    if(nb){ go(nb.dataset.p); }
+  });
+
+  // ---------- execution flow ----------
+  function nowState(id){
+    document.querySelectorAll('.now-state').forEach(s=>s.style.display='none');
+    document.getElementById(id).style.display='block';
+  }
+  document.getElementById('btn-start').onclick=function(){ nowState('now-active'); };
+  document.getElementById('btn-done').onclick=function(){
+    document.getElementById('closeout-line').textContent='Gym session — completed.';
+    nowState('now-closeout');
+  };
+  document.getElementById('btn-partial').onclick=function(){
+    document.getElementById('closeout-line').textContent='Gym session — completed (stopped early).';
+    nowState('now-closeout');
+  };
+  document.getElementById('btn-nextblock').onclick=function(){ nowState('now-idle'); };
+  document.getElementById('btn-simrecover').onclick=function(){ go('now'); nowState('now-recover'); };
+  document.getElementById('btn-skipall').onclick=function(){ nowState('now-idle'); };
+  document.getElementById('btn-skip').onclick=function(){
+    var t=document.getElementById('skip-toast'); t.style.display='block';
+    setTimeout(function(){ t.style.display='none'; }, 3500);
+  };
+  document.getElementById('skip-undo').onclick=function(e){
+    e.preventDefault(); document.getElementById('skip-toast').style.display='none';
+  };
+  document.getElementById('btn-escape').onclick=function(e){
+    e.preventDefault();
+    var t=document.getElementById('skip-toast');
+    t.innerHTML='Noted. The evening is still yours.'; t.style.display='block';
+    setTimeout(function(){ t.style.display='none';
+      t.innerHTML='Noted as not completed. <a href="#" id="skip-undo2" style="color:#fff; text-decoration:underline;">Undo</a>';},3000);
+  };
+  // observation chips: single-select per row
+  document.querySelectorAll('.seg.obs').forEach(function(seg){
+    seg.querySelectorAll('button').forEach(function(b){
+      b.onclick=function(){ seg.querySelectorAll('button').forEach(x=>x.classList.remove('on')); b.classList.add('on'); };
+    });
+  });
+
+  // ---------- daily planning: tap block, tap pod ----------
+  var picked=null;
+  document.querySelectorAll('#day-pool [data-pick]').forEach(function(bl){
+    bl.style.cursor='pointer';
+    bl.onclick=function(){
+      picked={label:bl.dataset.pick, cls:bl.dataset.cls, el:bl};
+      document.querySelectorAll('#p-day .pod').forEach(p=>p.classList.add('pickable'));
+      bl.style.outline='2px solid var(--accent)';
+    };
+  });
+  document.querySelectorAll('#p-day .pod .drop').forEach(function(drop){
+    drop.onclick=function(){
+      if(!picked) return;
+      var nb=document.createElement('div');
+      nb.className='block '+picked.cls;
+      nb.innerHTML='<div class="t">'+picked.label+'</div>';
+      drop.parentNode.insertBefore(nb, drop);
+      picked.el.remove(); picked=null;
+      document.querySelectorAll('#p-day .pod').forEach(p=>p.classList.remove('pickable'));
+      var t=document.getElementById('day-toast'); t.style.display='block';
+      setTimeout(function(){ t.style.display='none'; },2500);
+    };
+  });
+
+  // ---------- end of day ----------
+  document.getElementById('btn-closeday').onclick=function(){
+    document.getElementById('eod-open').style.display='none';
+    document.getElementById('eod-done').style.display='block';
+  };
+
+  // ---------- goals carry/rephrase/let go ----------
+  document.querySelectorAll('.seg.carry').forEach(function(seg){
+    var card=seg.closest('.goalcard');
+    seg.querySelectorAll('button').forEach(function(b,i){
+      b.onclick=function(){
+        seg.querySelectorAll('button').forEach(x=>x.classList.remove('on')); b.classList.add('on');
+        var msg=card.querySelector('.carrymsg'); var inp=card.querySelector('.field');
+        if(msg) msg.textContent = i===0 ? 'Comes along as-is' : (i===1 ? 'Edit the wording below' : 'Set down. It stays in the record, without judgment.');
+        if(inp) inp.style.display = i===1 ? 'block' : 'none';
+        if(i===1 && !inp){
+          var f=document.createElement('div'); f.className='field'; f.style.marginTop='8px'; f.style.marginBottom='0';
+          f.innerHTML='<input value="'+card.querySelector('div').textContent.trim()+'">'; card.appendChild(f);
+        }
+      };
+    });
+  });
+
+  // ---------- insights dismiss ----------
+  document.querySelectorAll('.ins .dismiss').forEach(function(b){
+    b.onclick=function(){
+      var c=b.closest('.ins');
+      c.style.transition='opacity .4s'; c.style.opacity='0';
+      setTimeout(function(){ c.remove(); },400);
+    };
+  });
+
+  // ---------- calendar regenerate ----------
+  document.getElementById('btn-regen').onclick=function(){
+    var u=document.getElementById('feed-url');
+    var s='abcdefghjkmnpqrstuvwxyz23456789', t='';
+    for(var i=0;i<3;i++) t+=s[Math.floor(Math.random()*s.length)];
+    var e2=''; for(var j=0;j<3;j++) e2+=s[Math.floor(Math.random()*s.length)];
+    u.textContent='https://bttrme.app/calendar/'+t+'…'+e2+'.ics';
+    u.style.background='var(--accent-soft)';
+    setTimeout(function(){ u.style.background='#f5f4f1'; },800);
+  };
+</script>
+</body>
+</html>

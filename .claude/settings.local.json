@@ -1,0 +1,21 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(pnpm --version)",
+      "Read(//pkg/env/global/**)",
+      "Read(//opt/**)",
+      "Bash(curl -fsSL https://nodejs.org/dist/latest-v22.x/SHASUMS256.txt)",
+      "Bash(curl -fsSLO https://nodejs.org/dist/latest-v22.x/node-v22.23.1-darwin-arm64.tar.gz)",
+      "Bash(shasum -a 256 -c -)",
+      "Bash(mkdir -p ~/.local)",
+      "Bash(tar -xzf node-v22.23.1-darwin-arm64.tar.gz -C ~/.local)",
+      "Bash(mv ~/.local/node-v22.23.1-darwin-arm64 ~/.local/node)",
+      "Bash(~/.local/node/bin/node --version)",
+      "Bash(git init *)",
+      "Bash(git config *)",
+      "Bash(echo \"git identity: $\\(git config user.name\\) <$\\(git config user.email\\)>\")",
+      "Bash(git add *)",
+      "Bash(git commit -m 'M1 step 1–2: repo skeleton, i18n foundation, guard tests *)"
+    ]
+  }
+}

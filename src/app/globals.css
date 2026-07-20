@@ -1,0 +1,15 @@
+@import "tailwindcss";
+
+/* RTL-first: components use only logical properties/utilities
+   (ms-*/me-*/ps-*/pe-*, start/end) — never ml/mr/left/right. */
+
+:root {
+  /* Neutral palette seed — no red anywhere (Phase 1 §3). */
+  --background: #faf9f7;
+  --foreground: #1f2937;
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+}
