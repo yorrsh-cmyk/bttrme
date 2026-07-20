@@ -15,7 +15,15 @@
       "Bash(git config *)",
       "Bash(echo \"git identity: $\\(git config user.name\\) <$\\(git config user.email\\)>\")",
       "Bash(git add *)",
-      "Bash(git commit -m 'M1 step 1–2: repo skeleton, i18n foundation, guard tests *)"
+      "Bash(git commit -m 'M1 step 1–2: repo skeleton, i18n foundation, guard tests *)",
+      "mcp__mcp-registry__list_connectors",
+      "mcp__mcp-registry__search_mcp_registry",
+      "Bash(ls ~/.ssh/*.pub 2>/dev/null && echo \"EXISTING KEYS FOUND\" || echo \"no existing keys\")",
+      "Bash(ssh-keygen -t ed25519 -C \"bttrme@michaelivanov\" -f ~/.ssh/id_ed25519 -N \"\" -q)",
+      "Bash(mkdir -p ~/.ssh)",
+      "Bash(ssh-keyscan -t ed25519 github.com)",
+      "Bash(git remote *)",
+      "Bash(git push *)"
     ]
   }
 }

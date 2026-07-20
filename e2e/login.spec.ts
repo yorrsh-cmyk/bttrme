@@ -13,14 +13,14 @@ test.describe("login screen", () => {
     await page.goto("/login");
     await expect(page.locator("main")).toHaveAttribute("dir", "rtl");
     await expect(page.locator("main")).toHaveAttribute("lang", "he");
-    await expect(page.getByRole("button")).toContainText("כניסה");
+    await expect(page.getByRole("button", { name: "כניסה" })).toBeVisible();
   });
 
   test("language toggle switches to English LTR", async ({ page }) => {
     await page.goto("/login");
     await page.getByRole("link", { name: "English" }).click();
     await expect(page.locator("main")).toHaveAttribute("dir", "ltr");
-    await expect(page.getByRole("button")).toContainText("Sign in");
+    await expect(page.getByRole("button", { name: "Sign in" })).toBeVisible();
   });
 });
 
@@ -34,7 +34,7 @@ test.describe("credential flows", () => {
     await page.goto("/login?lang=he");
     await page.getByLabel("שם משתמש").fill(username!);
     await page.getByLabel("סיסמה").fill("definitely-not-it");
-    await page.getByRole("button").click();
+    await page.getByRole("button", { name: "כניסה" }).click();
     await expect(page.getByRole("status")).toContainText("לא תואמים");
     await expect(page).toHaveURL(/\/login/);
   });
@@ -43,8 +43,9 @@ test.describe("credential flows", () => {
     await page.goto("/login?lang=he");
     await page.getByLabel("שם משתמש").fill(username!);
     await page.getByLabel("סיסמה").fill(password!);
-    await page.getByRole("button").click();
+    await page.getByRole("button", { name: "כניסה" }).click();
     await expect(page).toHaveURL(/\/week/);
     await expect(page.locator("html")).toHaveAttribute("dir", "rtl");
+    await expect(page.getByRole("navigation")).toContainText("השבוע");
   });
 });

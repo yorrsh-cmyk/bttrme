@@ -19,15 +19,22 @@ async function main() {
     process.exit(1);
   }
 
-  const username = (await ask("Username [michael]: ")) || "michael";
-  const password = await askHidden("Password (min 12 chars): ");
+  // Non-interactive path (automation/CI): SEED_USERNAME + SEED_PASSWORD.
+  let username = process.env.SEED_USERNAME;
+  let password = process.env.SEED_PASSWORD;
+
+  if (!username || !password) {
+    username = (await ask("Username [michael]: ")) || "michael";
+    password = await askHidden("Password (min 12 chars): ");
+    const confirm = await askHidden("Repeat password: ");
+    if (password !== confirm) {
+      console.error("Passwords do not match.");
+      process.exit(1);
+    }
+  }
+
   if (password.length < 12) {
     console.error("Password must be at least 12 characters.");
-    process.exit(1);
-  }
-  const confirm = await askHidden("Repeat password: ");
-  if (password !== confirm) {
-    console.error("Passwords do not match.");
     process.exit(1);
   }
 
