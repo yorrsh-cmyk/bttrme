@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { BLOCK_CATEGORIES } from "@/domain/blockTypes";
 import { useT } from "@/ui/i18n-context";
 
@@ -17,6 +18,62 @@ export interface BlockFieldDefaults {
 }
 
 const inputClass = "rounded-lg border border-gray-300 bg-white px-3 py-2 text-base";
+
+const DURATION_PRESETS = [10, 15, 30, 45, 60] as const;
+
+// Preset dropdown (10/15/30/45/60) plus a "custom" option that reveals a manual
+// minutes input. Only the active control carries the field `name`, so exactly
+// one value is submitted.
+function DurationField({
+  name,
+  initial,
+}: {
+  name: "defaultDurationMin" | "durationMin";
+  initial: number;
+}) {
+  const t = useT();
+  const f = t.library.field;
+  const startsPreset = (DURATION_PRESETS as readonly number[]).includes(initial);
+  const [mode, setMode] = useState<string>(startsPreset ? String(initial) : "custom");
+  const isCustom = mode === "custom";
+
+  return (
+    <label className="flex flex-col gap-1">
+      <span className="text-sm opacity-70">{f.duration}</span>
+      <div className="flex items-center gap-2">
+        <select
+          value={mode}
+          onChange={(e) => setMode(e.target.value)}
+          name={isCustom ? undefined : name}
+          className={inputClass}
+        >
+          {DURATION_PRESETS.map((p) => (
+            <option key={p} value={p}>
+              {p} {f.minutes}
+            </option>
+          ))}
+          <option value="custom">{f.custom}</option>
+        </select>
+        {isCustom ? (
+          <span className="flex items-center gap-2">
+            <input
+              name={name}
+              type="number"
+              inputMode="numeric"
+              min={1}
+              max={1440}
+              required
+              autoFocus
+              defaultValue={startsPreset ? "" : initial}
+              className={`${inputClass} w-24`}
+            />
+            <span className="text-sm opacity-60">{f.minutes}</span>
+          </span>
+        ) : null}
+      </div>
+    </label>
+  );
+}
 
 export function BlockFields({
   durationName,
@@ -41,39 +98,22 @@ export function BlockFields({
         />
       </label>
 
-      <div className="flex gap-3">
-        <label className="flex flex-1 flex-col gap-1">
-          <span className="text-sm opacity-70">{f.category}</span>
-          <select
-            name="category"
-            defaultValue={defaults.category ?? "work"}
-            className={inputClass}
-          >
-            {BLOCK_CATEGORIES.map((c) => (
-              <option key={c} value={c}>
-                {t.categories[c]}
-              </option>
-            ))}
-          </select>
-        </label>
+      <label className="flex flex-col gap-1">
+        <span className="text-sm opacity-70">{f.category}</span>
+        <select
+          name="category"
+          defaultValue={defaults.category ?? "work"}
+          className={inputClass}
+        >
+          {BLOCK_CATEGORIES.map((c) => (
+            <option key={c} value={c}>
+              {t.categories[c]}
+            </option>
+          ))}
+        </select>
+      </label>
 
-        <label className="flex w-32 flex-col gap-1">
-          <span className="text-sm opacity-70">{f.duration}</span>
-          <span className="flex items-center gap-2">
-            <input
-              name={durationName}
-              type="number"
-              inputMode="numeric"
-              min={1}
-              max={1440}
-              required
-              defaultValue={defaults.durationMin ?? 60}
-              className={`${inputClass} w-20`}
-            />
-            <span className="text-sm opacity-60">{f.minutes}</span>
-          </span>
-        </label>
-      </div>
+      <DurationField name={durationName} initial={defaults.durationMin ?? 60} />
 
       <label className="flex flex-col gap-1">
         <span className="text-sm opacity-70">{f.expectedOutcome}</span>

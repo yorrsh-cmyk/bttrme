@@ -22,14 +22,19 @@ test.describe("weekly planning", () => {
     await page.getByRole("button", { name: "כניסה" }).click();
     await expect(page.getByRole("heading", { name: "מה חשוב השבוע" })).toBeVisible();
 
-    // Create a library template (nav via the tab link, not a hard navigation).
+    // Create a library template (nav via the tab link, not a hard navigation),
+    // using a custom duration to exercise the preset→custom dropdown.
     await page.getByRole("link", { name: "הספרייה" }).click();
     await page.getByRole("button", { name: "סוג פעולה חדש" }).click();
     await page.getByLabel("שם", { exact: true }).fill(name);
-    await page.getByLabel("בשביל מה זה").fill("מטרת הבדיקה");
+    await page.getByLabel("משך זמן").selectOption("custom");
+    await page.getByRole("spinbutton").fill("25");
+    await page.getByLabel("מטרה", { exact: true }).fill("מטרת הבדיקה");
     await page.getByLabel("צעד ראשון").fill("הצעד הראשון");
     await page.getByRole("button", { name: "שמירה" }).click();
-    await expect(page.getByText(name)).toBeVisible();
+    // The saved template shows the custom 25-minute duration.
+    const row = page.getByRole("listitem").filter({ hasText: name });
+    await expect(row).toContainText("25");
 
     // Add it to this week's pool.
     await page.getByRole("link", { name: "השבוע" }).click();
