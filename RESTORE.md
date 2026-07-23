@@ -38,14 +38,15 @@ Deployments, **"Promote to Production"** on the last good deployment is instant.
 > Performed once during M1 to prove the path works (PRD 01 acceptance +
 > plan §9). Fill in when the drill is done.
 
-- Date performed: _____________________
-- Retention window observed in Neon Settings → Storage: _____________________
-- Restore branch name: _____________________
-- Recovery point chosen: _____________________
-- Verification query used and result (e.g. `SELECT count(*) FROM "user";` → 1):
-  _____________________
-- Restore branch deleted after the drill: ☐
-- Notes / surprises: _____________________
+- Date performed: **2026-07-23**
+- Retention window observed in Neon Settings → Storage: _free-tier default; re-confirm the exact window in the Neon console_
+- Restore branch name: **`restore-test`** (branched from `main`)
+- Recovery point chosen: a few minutes before the drill
+- Verification query used and result: `SELECT username, timezone FROM "user";` →
+  returned the seeded user (`yorrsh` / `Asia/Jerusalem`) on the restored branch
+- Restore branch deleted after the drill: ☑
+- Notes / surprises: none — restore branch created, real data verified present,
+  branch deleted. The PITR path works end to end.
 
 ## Password reset (not a data-loss path, but the only account recovery)
 
