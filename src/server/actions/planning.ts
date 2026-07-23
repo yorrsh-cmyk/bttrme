@@ -75,10 +75,8 @@ export async function saveGoals(
 
 // --- Pool blocks -------------------------------------------------------------
 
-export async function addBlockFromTemplate(formData: FormData): Promise<void> {
+export async function addBlockFromTemplate(weekId: string, templateId: string): Promise<void> {
   await requireUser();
-  const weekId = String(formData.get("weekId") ?? "");
-  const templateId = String(formData.get("templateId") ?? "");
   if (!weekId || !templateId) return;
 
   const [tpl] = await db

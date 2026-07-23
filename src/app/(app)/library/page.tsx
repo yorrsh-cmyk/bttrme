@@ -3,6 +3,7 @@ import { BLOCK_CATEGORIES } from "@/domain/blockTypes";
 import { archiveTemplate, unarchiveTemplate } from "@/server/actions/templates";
 import { getLanguage } from "@/server/language";
 import { listAllTemplates, type Template } from "@/server/queries";
+import { SubmitButton } from "@/ui/SubmitButton";
 import { TemplateForm } from "@/ui/TemplateForm";
 
 export default async function LibraryPage() {
@@ -56,9 +57,9 @@ export default async function LibraryPage() {
                 </span>
                 <form action={unarchiveTemplate}>
                   <input type="hidden" name="id" value={tpl.id} />
-                  <button type="submit" className="text-sm underline underline-offset-4 opacity-70">
+                  <SubmitButton className="text-sm underline underline-offset-4 opacity-70">
                     {copy.library.unarchive}
-                  </button>
+                  </SubmitButton>
                 </form>
               </li>
             ))}
@@ -107,9 +108,9 @@ async function ArchiveButton({ id }: { id: string }) {
   return (
     <form action={archiveTemplate}>
       <input type="hidden" name="id" value={id} />
-      <button type="submit" className="text-sm underline underline-offset-4 opacity-70">
+      <SubmitButton className="text-sm underline underline-offset-4 opacity-70">
         {copy.library.archive}
-      </button>
+      </SubmitButton>
     </form>
   );
 }

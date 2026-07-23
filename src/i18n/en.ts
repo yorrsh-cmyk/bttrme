@@ -39,8 +39,8 @@ export const en = {
     rest: "Rest",
   },
   library: {
-    empty: "Your library of actions will live here.",
-    intro: "The kinds of actions your life is made of — define each once.",
+    empty: "Your actions will show here.",
+    intro: "Actions that recur through your week — define each one once.",
     createFirst: "Add your first action type",
     addTemplate: "New action type",
     editTemplate: "Edit action type",

@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { removeBlock } from "@/server/actions/planning";
 import { BlockForm } from "@/ui/BlockForm";
+import { SubmitButton } from "@/ui/SubmitButton";
 import { useT } from "@/ui/i18n-context";
 
 export interface PoolBlock {
@@ -59,9 +60,9 @@ export function PoolBlockCard({ block }: { block: PoolBlock }) {
         </button>
         <form action={removeBlock}>
           <input type="hidden" name="id" value={block.id} />
-          <button type="submit" className="text-sm underline underline-offset-4 opacity-70">
+          <SubmitButton className="text-sm underline underline-offset-4 opacity-70">
             {t.planning.remove}
-          </button>
+          </SubmitButton>
         </form>
       </div>
     </li>
