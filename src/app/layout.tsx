@@ -10,6 +10,9 @@ export const metadata: Metadata = {
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
+  // Draw under the iOS status bar / home indicator so we can pad the fixed
+  // bottom nav past the home bar with env(safe-area-inset-*) (home-screen mode).
+  viewportFit: "cover",
 };
 
 // <html lang/dir> comes from the language cookie (mirror of the user row,

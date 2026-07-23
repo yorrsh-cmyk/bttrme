@@ -13,7 +13,7 @@ export function NavTabs({ tabs }: NavTabsProps) {
   const pathname = usePathname();
 
   return (
-    <nav className="fixed inset-x-0 bottom-0 z-10 border-t border-gray-200 bg-white/95 backdrop-blur sm:static sm:border-t-0 sm:border-b sm:bg-transparent">
+    <nav className="fixed inset-x-0 bottom-0 z-10 border-t border-gray-200 bg-white/95 pb-[env(safe-area-inset-bottom)] backdrop-blur sm:static sm:border-t-0 sm:border-b sm:pb-0 sm:bg-transparent">
       <ul className="mx-auto grid w-full max-w-3xl grid-cols-4">
         {tabs.map((tab) => {
           const active =

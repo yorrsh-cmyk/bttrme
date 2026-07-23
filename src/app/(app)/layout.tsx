@@ -34,7 +34,9 @@ export default async function AppLayout({
         </Link>
       </header>
       <NavTabs tabs={tabs} />
-      <main className="flex-1 px-4 py-6 pb-24 sm:px-6 sm:pb-6">{children}</main>
+      <main className="flex-1 px-4 py-6 pb-[calc(6rem+env(safe-area-inset-bottom))] sm:px-6 sm:pb-6">
+        {children}
+      </main>
     </div>
   );
 }
