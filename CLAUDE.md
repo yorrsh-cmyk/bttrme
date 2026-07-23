@@ -2,9 +2,11 @@
 
 Personal (single-user) web app for Michael that bridges the gap between intention and action. This is **not** a productivity/task app — read `phase_1_need_interpretation.md` before touching product behavior.
 
-## Current status (2026-07-20)
+## Current status (2026-07-23)
 
-All 7 planning gates are **approved**. Next step: **implement Milestone 1** per `PRD_01_Foundation_and_Authentication.md` and `final_implementation_plan.md`. No code exists yet.
+**M1 (Foundation and Authentication) is complete, deployed, and approved.** Live at `bttrme-ashen.vercel.app` (Vercel Hobby); Neon `main` + `dev` branches; migration 001 applied; single user seeded (`yorrsh`, Asia/Jerusalem, Sunday, Hebrew). All PRD 01 §10 acceptance criteria met — HTTPS+HSTS, iPhone+laptop sign-in incl. home-screen mode, 5-failure lockout (verified), bilingual RTL/LTR shell, CI green, Neon PITR restore drilled (see `RESTORE.md`), cold-start bearable (<2s, no warm-up cron), $0/month.
+
+Next step: **await approval to begin Milestone 2 (Weekly Planning Core)** per `PRD_02_Weekly_Planning_Core.md`. Do not start M2 without Michael's go-ahead. First M2 tasks: migration 002 → `load.ts` + `weekCycle.ts` (pure, tested) → library CRUD → week/goals/pool/load signal → events wiring → Hebrew copy review of planning screens.
 
 ## Source-of-truth documents (in this folder, all approved)
 
