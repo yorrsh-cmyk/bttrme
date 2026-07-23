@@ -8,6 +8,20 @@
       "when": 1784574689246,
       "tag": "0000_public_cloak",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1784838824556,
+      "tag": "0001_chilly_chronomancer",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1784838908102,
+      "tag": "0002_nappy_texas_twister",
+      "breakpoints": true
     }
   ]
 }

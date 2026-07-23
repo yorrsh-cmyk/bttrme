@@ -26,18 +26,22 @@ export async function updateSettings(
   const language = formData.get("language");
   const timezone = String(formData.get("timezone") ?? "");
   const weekStartDay = formData.get("weekStartDay");
+  const loadThresholdHours = Number(formData.get("loadThresholdHours") ?? "");
 
   if (
     !isLanguage(language) ||
     !isTimezone(timezone) ||
-    (weekStartDay !== "sun" && weekStartDay !== "mon")
+    (weekStartDay !== "sun" && weekStartDay !== "mon") ||
+    !Number.isInteger(loadThresholdHours) ||
+    loadThresholdHours < 0 ||
+    loadThresholdHours > 168
   ) {
     return { saved: false };
   }
 
   await db
     .update(user)
-    .set({ language, timezone, weekStartDay })
+    .set({ language, timezone, weekStartDay, loadThresholdHours })
     .where(eq(user.id, me.id));
   await setLanguageCookie(language);
   revalidatePath("/", "layout");

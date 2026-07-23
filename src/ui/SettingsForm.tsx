@@ -9,6 +9,7 @@ interface SettingsFormProps {
     language: Language;
     timezone: string;
     weekStartDay: "sun" | "mon";
+    loadThresholdHours: number;
   };
   timezones: string[];
   copy: {
@@ -17,6 +18,7 @@ interface SettingsFormProps {
     weekStart: string;
     weekStartSun: string;
     weekStartMon: string;
+    loadThreshold: string;
     save: string;
     saved: string;
     languageNames: Record<Language, string>;
@@ -67,6 +69,19 @@ export function SettingsForm({ initial, timezones, copy }: SettingsFormProps) {
           <option value="sun">{copy.weekStartSun}</option>
           <option value="mon">{copy.weekStartMon}</option>
         </select>
+      </label>
+
+      <label className="flex flex-col gap-1">
+        <span className="text-sm opacity-70">{copy.loadThreshold}</span>
+        <input
+          name="loadThresholdHours"
+          type="number"
+          inputMode="numeric"
+          min={0}
+          max={168}
+          defaultValue={initial.loadThresholdHours}
+          className="w-24 rounded-lg border border-gray-300 bg-white px-3 py-2"
+        />
       </label>
 
       <div className="flex items-center gap-3">

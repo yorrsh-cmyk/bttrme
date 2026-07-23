@@ -2,6 +2,7 @@ import "server-only";
 import { createHmac, randomBytes } from "node:crypto";
 import { eq } from "drizzle-orm";
 import { cookies } from "next/headers";
+import { redirect } from "next/navigation";
 import { db } from "@/db/client";
 import { session, user } from "@/db/schema";
 import {
@@ -94,4 +95,14 @@ export async function destroySession(): Promise<void> {
     await db.delete(session).where(eq(session.id, hashSessionToken(token)));
   }
   store.delete(SESSION_COOKIE);
+}
+
+/**
+ * For server actions: the authenticated user, or a redirect to /login.
+ * (Server components use the (app) layout guard; actions guard themselves.)
+ */
+export async function requireUser(): Promise<SessionUser> {
+  const me = await getSessionUser();
+  if (!me) redirect("/login");
+  return me;
 }

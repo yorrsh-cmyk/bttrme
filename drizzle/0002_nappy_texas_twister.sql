@@ -1,0 +1,1 @@
+ALTER TABLE "user" ADD COLUMN "load_threshold_hours" integer DEFAULT 20 NOT NULL;

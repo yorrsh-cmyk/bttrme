@@ -22,6 +22,7 @@ export default async function SettingsPage() {
           language: me.language,
           timezone: me.timezone,
           weekStartDay: me.weekStartDay,
+          loadThresholdHours: me.loadThresholdHours,
         }}
         timezones={Intl.supportedValuesOf("timeZone")}
         copy={{
@@ -30,6 +31,7 @@ export default async function SettingsPage() {
           weekStart: copy.settings.weekStart,
           weekStartSun: copy.settings.weekStartSun,
           weekStartMon: copy.settings.weekStartMon,
+          loadThreshold: copy.settings.loadThreshold,
           save: copy.common.save,
           saved: copy.settings.saved,
           languageNames: copy.languageNames,

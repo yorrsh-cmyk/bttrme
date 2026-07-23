@@ -1,0 +1,69 @@
+"use client";
+
+import { useState } from "react";
+import { removeBlock } from "@/server/actions/planning";
+import { BlockForm } from "@/ui/BlockForm";
+import { useT } from "@/ui/i18n-context";
+
+export interface PoolBlock {
+  id: string;
+  name: string;
+  category: string;
+  durationMin: number;
+  expectedOutcome: string;
+  firstAction: string;
+  notes: string | null;
+}
+
+export function PoolBlockCard({ block }: { block: PoolBlock }) {
+  const t = useT();
+  const [editing, setEditing] = useState(false);
+
+  if (editing) {
+    return (
+      <li>
+        <BlockForm
+          mode="edit"
+          blockId={block.id}
+          defaults={{
+            name: block.name,
+            category: block.category,
+            durationMin: block.durationMin,
+            expectedOutcome: block.expectedOutcome,
+            firstAction: block.firstAction,
+            notes: block.notes,
+          }}
+          onDone={() => setEditing(false)}
+        />
+      </li>
+    );
+  }
+
+  return (
+    <li className="flex items-center justify-between gap-3 rounded-xl border border-gray-200 px-4 py-3">
+      <div className="flex flex-col">
+        <span dir="auto" className="font-medium">
+          {block.name}
+        </span>
+        <span className="text-sm opacity-60">
+          {block.durationMin} {t.planning.minutesShort}
+        </span>
+      </div>
+      <div className="flex shrink-0 items-center gap-4">
+        <button
+          type="button"
+          onClick={() => setEditing(true)}
+          className="text-sm underline underline-offset-4 opacity-70"
+        >
+          {t.planning.edit}
+        </button>
+        <form action={removeBlock}>
+          <input type="hidden" name="id" value={block.id} />
+          <button type="submit" className="text-sm underline underline-offset-4 opacity-70">
+            {t.planning.remove}
+          </button>
+        </form>
+      </div>
+    </li>
+  );
+}

@@ -17,7 +17,13 @@ const eslintConfig = [
     rules: {
       "react/jsx-no-literals": [
         "error",
-        { noStrings: true, ignoreProps: true, allowedStrings: [] },
+        {
+          noStrings: true,
+          ignoreProps: true,
+          // Language-neutral punctuation/separators only — never words. Real
+          // copy must still come from the typed catalog.
+          allowedStrings: ["·", ":", "/", "(", ")", "—", "–", "-", "×"],
+        },
       ],
     },
   },
