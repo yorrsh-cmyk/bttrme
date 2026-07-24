@@ -15,6 +15,7 @@ export const EVENT = {
   templateCreated: "template_created",
   templateEdited: "template_edited",
   templateArchived: "template_archived",
+  templateDeleted: "template_deleted",
   weekCreated: "week_created",
   goalSet: "goal_set",
   goalEdited: "goal_edited",

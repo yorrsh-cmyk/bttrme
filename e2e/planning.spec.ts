@@ -53,4 +53,29 @@ test.describe("weekly planning", () => {
     await card.getByRole("button", { name: "הסרה" }).click();
     await expect(card).toHaveCount(0);
   });
+
+  test("an unused template can be deleted from the library", async ({ page }) => {
+    const name = `למחיקה ${Date.now()}`;
+
+    await page.goto("/login?lang=he");
+    await page.getByLabel("שם משתמש").fill(username!);
+    await page.getByLabel("סיסמה").fill(password!);
+    await page.getByRole("button", { name: "כניסה" }).click();
+    await expect(page.getByRole("heading", { name: "מה חשוב השבוע" })).toBeVisible();
+
+    // Create a template and leave it unused.
+    await page.getByRole("link", { name: "הספרייה" }).click();
+    await page.getByRole("button", { name: "סוג פעולה חדש" }).click();
+    await page.getByLabel("שם", { exact: true }).fill(name);
+    await page.getByLabel("מטרה", { exact: true }).fill("מטרת הבדיקה");
+    await page.getByLabel("צעד ראשון").fill("הצעד הראשון");
+    await page.getByRole("button", { name: "שמירה" }).click();
+
+    // Unused → offers delete (not archive). Two-step inline confirm.
+    const row = page.getByRole("listitem").filter({ hasText: name });
+    await expect(row.getByRole("button", { name: "ארכיון" })).toHaveCount(0);
+    await row.getByRole("button", { name: "מחיקה" }).click();
+    await row.getByRole("button", { name: "מחיקה" }).click();
+    await expect(page.getByRole("listitem").filter({ hasText: name })).toHaveCount(0);
+  });
 });

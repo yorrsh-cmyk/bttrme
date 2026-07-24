@@ -2,13 +2,14 @@ import { t } from "@/i18n/catalog";
 import { BLOCK_CATEGORIES } from "@/domain/blockTypes";
 import { archiveTemplate, unarchiveTemplate } from "@/server/actions/templates";
 import { getLanguage } from "@/server/language";
-import { listAllTemplates, type Template } from "@/server/queries";
+import { listAllTemplates, listUsedTemplateIds, type Template } from "@/server/queries";
+import { DeleteTemplateButton } from "@/ui/DeleteTemplateButton";
 import { SubmitButton } from "@/ui/SubmitButton";
 import { TemplateForm } from "@/ui/TemplateForm";
 
 export default async function LibraryPage() {
   const copy = t(await getLanguage());
-  const templates = await listAllTemplates();
+  const [templates, usedIds] = await Promise.all([listAllTemplates(), listUsedTemplateIds()]);
   const active = templates.filter((tpl) => tpl.archivedAt === null);
   const archived = templates.filter((tpl) => tpl.archivedAt !== null);
 
@@ -33,7 +34,12 @@ export default async function LibraryPage() {
                 <h2 className="text-sm font-semibold opacity-60">{copy.categories[category]}</h2>
                 <ul className="flex flex-col gap-2">
                   {inCategory.map((tpl) => (
-                    <TemplateRow key={tpl.id} tpl={tpl} minutesLabel={copy.planning.minutesShort} />
+                    <TemplateRow
+                      key={tpl.id}
+                      tpl={tpl}
+                      used={usedIds.has(tpl.id)}
+                      minutesLabel={copy.planning.minutesShort}
+                    />
                   ))}
                 </ul>
               </div>
@@ -50,17 +56,20 @@ export default async function LibraryPage() {
             {archived.map((tpl) => (
               <li
                 key={tpl.id}
-                className="flex items-center justify-between rounded-xl border border-gray-200 px-4 py-3"
+                className="flex items-center justify-between gap-3 rounded-xl border border-gray-200 px-4 py-3"
               >
                 <span dir="auto" className="opacity-60">
                   {tpl.name}
                 </span>
-                <form action={unarchiveTemplate}>
-                  <input type="hidden" name="id" value={tpl.id} />
-                  <SubmitButton className="text-sm underline underline-offset-4 opacity-70">
-                    {copy.library.unarchive}
-                  </SubmitButton>
-                </form>
+                <span className="flex shrink-0 items-center gap-4">
+                  <form action={unarchiveTemplate}>
+                    <input type="hidden" name="id" value={tpl.id} />
+                    <SubmitButton className="text-sm underline underline-offset-4 opacity-70">
+                      {copy.library.unarchive}
+                    </SubmitButton>
+                  </form>
+                  {usedIds.has(tpl.id) ? null : <DeleteTemplateButton templateId={tpl.id} />}
+                </span>
               </li>
             ))}
           </ul>
@@ -70,7 +79,15 @@ export default async function LibraryPage() {
   );
 }
 
-function TemplateRow({ tpl, minutesLabel }: { tpl: Template; minutesLabel: string }) {
+function TemplateRow({
+  tpl,
+  used,
+  minutesLabel,
+}: {
+  tpl: Template;
+  used: boolean;
+  minutesLabel: string;
+}) {
   return (
     <li className="flex flex-col gap-2 rounded-xl border border-gray-200 px-4 py-3">
       <div className="flex items-baseline justify-between gap-3">
@@ -97,7 +114,8 @@ function TemplateRow({ tpl, minutesLabel }: { tpl: Template; minutesLabel: strin
             notes: tpl.notes,
           }}
         />
-        <ArchiveButton id={tpl.id} />
+        {/* Used templates carry history → archive only; unused → delete. */}
+        {used ? <ArchiveButton id={tpl.id} /> : <DeleteTemplateButton templateId={tpl.id} />}
       </div>
     </li>
   );

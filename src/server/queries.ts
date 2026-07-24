@@ -29,6 +29,18 @@ export function listAllTemplates(): Promise<Template[]> {
 }
 
 /**
+ * Template ids referenced by at least one block (ever). These carry history,
+ * so they can be archived but not hard-deleted (PRD 02 §3). Templates absent
+ * from this set are unused and safe to delete.
+ */
+export async function listUsedTemplateIds(): Promise<Set<string>> {
+  const rows = await db
+    .selectDistinct({ templateId: block.templateId })
+    .from(block);
+  return new Set(rows.map((r) => r.templateId).filter((id): id is string => id !== null));
+}
+
+/**
  * The week row for `startDate`, materializing it on first touch (PRD 02 FR-3).
  * Idempotent: the unique start_date + onConflictDoNothing means concurrent
  * or repeated visits create exactly one row and emit exactly one week_created.

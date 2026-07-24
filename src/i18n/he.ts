@@ -61,6 +61,8 @@ export const he: Catalog = {
     edit: "עריכה",
     archive: "ארכיון",
     unarchive: "להחזיר",
+    delete: "מחיקה",
+    deleteConfirm: "למחוק?",
   },
   planning: {
     goalsTitle: "מה חשוב השבוע",

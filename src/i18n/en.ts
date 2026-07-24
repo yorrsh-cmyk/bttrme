@@ -60,6 +60,8 @@ export const en = {
     edit: "Edit",
     archive: "Archive",
     unarchive: "Bring back",
+    delete: "Delete",
+    deleteConfirm: "Delete?",
   },
   planning: {
     goalsTitle: "What matters this week",

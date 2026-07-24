@@ -4,7 +4,7 @@ import { eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { db } from "@/db/client";
 import { ENTITY, EVENT, appendEvent } from "@/db/events";
-import { blockTemplate } from "@/db/schema";
+import { block, blockTemplate } from "@/db/schema";
 import type { BlockCategory } from "@/domain/blockTypes";
 import { requireUser } from "@/server/session";
 import {
@@ -110,5 +110,26 @@ export async function unarchiveTemplate(formData: FormData): Promise<void> {
   const id = String(formData.get("id") ?? "");
   await db.update(blockTemplate).set({ archivedAt: null }).where(eq(blockTemplate.id, id));
   await appendEvent(ENTITY.template, id, EVENT.templateEdited, { unarchived: true });
+  revalidatePath("/library");
+}
+
+// Hard delete — only for templates never used in any week (no referencing
+// blocks). Used templates carry history and must be archived instead (PRD 02
+// §3); the guard here makes deleting one a no-op, and the FK is a final safety
+// net. The UI only offers delete for unused templates.
+export async function deleteTemplate(formData: FormData): Promise<void> {
+  await requireUser();
+  const id = String(formData.get("id") ?? "");
+  if (!id) return;
+
+  const references = await db
+    .select({ id: block.id })
+    .from(block)
+    .where(eq(block.templateId, id))
+    .limit(1);
+  if (references.length > 0) return; // used — protected; archive instead
+
+  await db.delete(blockTemplate).where(eq(blockTemplate.id, id));
+  await appendEvent(ENTITY.template, id, EVENT.templateDeleted, {});
   revalidatePath("/library");
 }
