@@ -94,6 +94,18 @@ export function todayInTimeZone(now: Date, timeZone: string): CivilDate {
   return toCivilDate(civilPartsInTimeZone(now, timeZone));
 }
 
+/** The local wall-clock hour (0–23) for an instant, in a given IANA timezone. */
+export function hourInTimeZone(now: Date, timeZone: string): number {
+  const parts = new Intl.DateTimeFormat("en-US", {
+    timeZone,
+    hour: "2-digit",
+    hour12: false,
+  }).formatToParts(now);
+  const raw = parts.find((p) => p.type === "hour")?.value ?? "0";
+  // Intl can render midnight as "24" in some engines; normalise to 0–23.
+  return Number(raw) % 24;
+}
+
 export function nextWeekStart(weekStart: CivilDate): CivilDate {
   return addDays(weekStart, 7);
 }

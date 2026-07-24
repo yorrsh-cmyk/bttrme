@@ -23,6 +23,8 @@ export function middleware(request: NextRequest) {
 }
 
 export const config = {
-  // Everything except static assets and Next internals (FR-1).
-  matcher: ["/((?!_next/static|_next/image|favicon.ico|icon.svg).*)"],
+  // Everything except static assets, Next internals, and API routes. /api/cron
+  // is token-gated by CRON_SECRET in the route itself, so it must not be caught
+  // by the cookie fast-path (a cookieless cron request would 302 to /login).
+  matcher: ["/((?!api|_next/static|_next/image|favicon.ico|icon.svg).*)"],
 };

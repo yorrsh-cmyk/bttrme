@@ -1,9 +1,10 @@
 import "server-only";
-import { and, asc, eq, isNull } from "drizzle-orm";
+import { and, asc, eq, isNull, lt, notInArray } from "drizzle-orm";
 import { db } from "@/db/client";
 import { ENTITY, EVENT, appendEvent } from "@/db/events";
 import { block, blockTemplate, week, weeklyGoal } from "@/db/schema";
-import type { WeekStartDay } from "@/domain/weekCycle";
+import type { BlockStatus, PartOfDay } from "@/domain/blockTypes";
+import type { CivilDate, WeekStartDay } from "@/domain/weekCycle";
 import { weekStartForInstant } from "@/domain/weekCycle";
 
 export type Template = typeof blockTemplate.$inferSelect;
@@ -85,4 +86,63 @@ export function listPoolBlocks(weekId: string): Promise<Block[]> {
     .from(block)
     .where(and(eq(block.weekId, weekId), eq(block.status, "pool")))
     .orderBy(asc(block.category), asc(block.createdAt));
+}
+
+// --- M3: scheduling, execution, recovery -----------------------------------
+
+/** A single block by id, or undefined. */
+export async function getBlock(id: string): Promise<Block | undefined> {
+  const [row] = await db.select().from(block).where(eq(block.id, id)).limit(1);
+  return row;
+}
+
+// The statuses that appear on a day: everything except the pool (not yet placed)
+// and removed (hidden). Terminal blocks stay visible so the day reads as history.
+const DAY_STATUSES_HIDDEN: BlockStatus[] = ["pool", "removed"];
+
+/** Every block placed on a given civil date (any live status), ordered. */
+export function listDayBlocks(date: CivilDate): Promise<Block[]> {
+  return db
+    .select()
+    .from(block)
+    .where(and(eq(block.scheduledDate, date), notInArray(block.status, DAY_STATUSES_HIDDEN)))
+    .orderBy(asc(block.dayOrder), asc(block.startTime), asc(block.createdAt));
+}
+
+/**
+ * Still-`scheduled` blocks whose civil day is strictly before `today` — the
+ * auto-close / absence-archive candidates. The domain (blocksToAutoClose)
+ * re-confirms the boundary; this is the efficient DB pre-filter.
+ */
+export function listPastScheduledBlocks(today: CivilDate): Promise<Block[]> {
+  return db
+    .select()
+    .from(block)
+    .where(and(eq(block.status, "scheduled"), lt(block.scheduledDate, today)))
+    .orderBy(asc(block.scheduledDate), asc(block.dayOrder));
+}
+
+/** The currently-active block, if any (there is at most one — the UI enforces it). */
+export async function getActiveBlock(): Promise<Block | undefined> {
+  const [row] = await db.select().from(block).where(eq(block.status, "active")).limit(1);
+  return row;
+}
+
+/**
+ * The next day_order for a (date, part_of_day) slot — appended after any block
+ * already live there. Used when placing a pool block onto the day (FR-2).
+ */
+export async function nextDayOrder(date: CivilDate, partOfDay: PartOfDay): Promise<number> {
+  const rows = await db
+    .select({ dayOrder: block.dayOrder })
+    .from(block)
+    .where(
+      and(
+        eq(block.scheduledDate, date),
+        eq(block.partOfDay, partOfDay),
+        notInArray(block.status, DAY_STATUSES_HIDDEN),
+      ),
+    );
+  const max = rows.reduce((m, r) => Math.max(m, r.dayOrder ?? -1), -1);
+  return max + 1;
 }

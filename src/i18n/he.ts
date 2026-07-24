@@ -29,6 +29,57 @@ export const he: Catalog = {
   today: {
     empty: "הבלוקים של היום יופיעו כאן.",
   },
+  parts: {
+    morning: "בוקר",
+    afternoon: "צהריים",
+    evening: "ערב",
+  },
+  // רגע העשייה — המסך הרגיש ביותר. שקט, בלי שיפוט, בלי מספרים מצטברים, בלי אדום
+  // (PRD 03 §6). טיוטה — לניסוח סופי בשיחת אוצר המילים של M3.
+  execution: {
+    firstStep: "הצעד הראשון",
+    doneWhen: "מסתיים כאשר",
+    whyToday: "מטרה",
+    elapsed: "עברו",
+    planned: "מתוכנן",
+    minutesShort: "דק׳",
+    start: "התחל",
+    defer: "הזז להמשך היום",
+    move: "יום אחר",
+    skip: "דלג",
+    done: "סיים",
+    stoppedEarly: "סיים מוקדם יותר",
+    stillGoing: "עדיין רץ",
+    nothingMore: "אין עוד תכנונים לחלק זה של היום",
+    planToday: "לתכנן את היום",
+    skipUndone: "הדילוג בוטל.",
+  },
+  recovery: {
+    passedTitle: "הזמן עבר",
+    passedIntro: "ניתן לחזור לכל אחד מהם, או להניח אותם בצד להיום",
+    skipAll: "דלג להיום",
+    // Michael folded the greeting into one line; split at his comma so the
+    // title/intro slots keep his exact words without doubling the greeting.
+    absenceTitle: "ברוך שובך",
+    absenceIntro: "ניתן להתחיל מחדש היום",
+    archive: "החל מחדש",
+  },
+  scheduling: {
+    title: "לתכנן את היום",
+    fromPool: "מהשבוע הזה",
+    poolEmpty: "אין בלוקים במאגר השבוע להנחה כאן.",
+    onTheDay: "על היום",
+    dayEmpty: "עוד לא הונח כלום על היום הזה.",
+    place: "להניח",
+    add: "הוספה",
+    time: "שעה",
+    whyThisDay: "למה ביום הזה",
+    noGoalLink: "בלי קישור",
+    backToPool: "חזרה למאגר",
+    moveTitle: "העברה ליום אחר",
+    up: "↑",
+    down: "↓",
+  },
   review: {
     empty: "המבט אחורה יקרה כאן, כשיהיה שבוע להסתכל עליו.",
   },

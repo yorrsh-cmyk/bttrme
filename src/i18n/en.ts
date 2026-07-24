@@ -28,6 +28,64 @@ export const en = {
   today: {
     empty: "Today's blocks will appear here.",
   },
+  parts: {
+    morning: "Morning",
+    afternoon: "Afternoon",
+    evening: "Evening",
+  },
+  // The execution moment — the most sensitive screen. Silence, no judgment, no
+  // aggregate numbers, no red (PRD 03 §6). Labels are neutral; facts belong to
+  // the block, never to "you".
+  execution: {
+    firstStep: "First step",
+    doneWhen: "Done when",
+    whyToday: "Why today",
+    // Neutral time display for an active block (FR-10). Overrun is not an error.
+    elapsed: "elapsed",
+    planned: "planned",
+    minutesShort: "min",
+    // The four responses (each ≤ 2 taps).
+    start: "Start",
+    defer: "Later today",
+    move: "Another day",
+    skip: "Skip",
+    // Close-out — "stopped early" is a completion, not a failure.
+    done: "Done",
+    stoppedEarly: "Stopped early",
+    // Stale active-block prompt (FR-7): asked, never auto-failed.
+    stillGoing: "Still going?",
+    // Calm empty / finished states — no counts, no praise.
+    nothingMore: "Nothing more scheduled for this part of the day.",
+    planToday: "Plan today",
+    skipUndone: "Skip undone.",
+  },
+  // Recovery — a passed window or a return after days away. No red, no
+  // exclamation marks, no count-badges (FR-11/FR-12). A miss is never a debt.
+  recovery: {
+    passedTitle: "These blocks' time has passed",
+    passedIntro: "Pick up any of them, or set them aside for today.",
+    skipAll: "Set them aside for today",
+    absenceTitle: "Good to see you",
+    absenceIntro: "Some days went by. You can start fresh from today.",
+    archive: "Start fresh from today",
+  },
+  // Placing pool blocks onto a day (PRD 03 §5 scheduling).
+  scheduling: {
+    title: "Plan the day",
+    fromPool: "From this week",
+    poolEmpty: "Nothing in the week's pool to place here.",
+    onTheDay: "On the day",
+    dayEmpty: "Nothing placed on this day yet.",
+    place: "Place",
+    add: "Add",
+    time: "Time",
+    whyThisDay: "Why this day",
+    noGoalLink: "No link",
+    backToPool: "Back to the pool",
+    moveTitle: "Move to another day",
+    up: "↑",
+    down: "↓",
+  },
   review: {
     empty: "Reviews will happen here, once there is a week to look at.",
   },

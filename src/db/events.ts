@@ -8,6 +8,9 @@ export const ENTITY = {
   week: "week",
   goal: "goal",
   block: "block",
+  // A civil date (YYYY-MM-DD) as entity_id — the day-level markers hang off it
+  // (day_auto_closed, absence_archived) rather than any single block.
+  day: "day",
 } as const;
 
 // Event types per PRD 02 FR-9 (extended each milestone).
@@ -23,6 +26,17 @@ export const EVENT = {
   blockAddedToPool: "block_added_to_pool",
   blockEdited: "block_edited",
   blockRemoved: "block_removed",
+  // M3 (PRD 03 §7): the execution lifecycle. block_moved carries from/to +
+  // reason; block_completed carries full|partial; block_not_completed carries
+  // the cause (chosen|auto). day_auto_closed / absence_archived are the
+  // day-level markers for the two silent recovery paths.
+  blockScheduled: "block_scheduled",
+  blockMoved: "block_moved",
+  blockStarted: "block_started",
+  blockCompleted: "block_completed",
+  blockNotCompleted: "block_not_completed",
+  dayAutoClosed: "day_auto_closed",
+  absenceArchived: "absence_archived",
 } as const;
 
 // The ONLY write path to the event log. Insert, never update, never delete —

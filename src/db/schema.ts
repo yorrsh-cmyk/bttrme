@@ -12,7 +12,12 @@ import {
   unique,
   uuid,
 } from "drizzle-orm/pg-core";
-import type { BlockCategory, BlockStatus } from "@/domain/blockTypes";
+import type {
+  BlockCategory,
+  BlockStatus,
+  NotCompletedCause,
+  PartOfDay,
+} from "@/domain/blockTypes";
 
 // Migration 001 (M1): user, session, login_attempt, events.
 // Field list per phase_4_information_architecture.md Part D (authoritative).
@@ -29,6 +34,10 @@ export const user = pgTable("user", {
   // migration 002 for M2, tunable in settings (PRD 02 NFR). day_end_hour and
   // part-of-day windows (IA Part D) arrive with M3/M6 as they're needed.
   loadThresholdHours: integer("load_threshold_hours").notNull().default(20),
+  // The hour (local, 0–23) from which the daily review is offered (IA Part D,
+  // default 20). Added in migration 003 for M3; consumed by M4's review gate.
+  // Note: day-end AUTO-CLOSE is at civil midnight, not this hour (PRD 03 §9).
+  dayEndHour: integer("day_end_hour").notNull().default(20),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });
 
@@ -121,7 +130,10 @@ export const weeklyGoal = pgTable(
 
 // A block is an instance in a week's pool. Template fields are COPIED at
 // creation (history is immutable — editing a template never rewrites a block).
-// M2 uses status pool|removed; migration 003 adds the scheduling/state fields.
+// Migration 002 seeded the pool/removed fields; migration 003 (M3) adds the
+// scheduling + execution-state fields below. Moves/defers update scheduled_date
+// / part_of_day WITHOUT changing status (IA Part E) — the change lives in the
+// event log (block_moved), never overwriting history.
 export const block = pgTable(
   "block",
   {
@@ -130,6 +142,9 @@ export const block = pgTable(
       .notNull()
       .references(() => week.id),
     templateId: uuid("template_id").references(() => blockTemplate.id),
+    // The optional "why this day" link (PRD 03 §7): the week goal this block
+    // serves, picked at scheduling time and used only to show context.
+    goalId: uuid("goal_id").references(() => weeklyGoal.id),
     name: text("name").notNull(),
     category: text("category").$type<BlockCategory>().notNull(),
     durationMin: integer("duration_min").notNull(),
@@ -137,7 +152,22 @@ export const block = pgTable(
     firstAction: text("first_action").notNull(),
     notes: text("notes"),
     status: text("status").$type<BlockStatus>().notNull().default("pool"),
+    // Scheduling (nullable while in the pool). start_time is a civil wall-clock
+    // "HH:MM" (optional); part_of_day is the default granularity. day_order is
+    // the within-part ordering (FR-2).
+    scheduledDate: date("scheduled_date", { mode: "string" }),
+    partOfDay: text("part_of_day").$type<PartOfDay>(),
+    startTime: text("start_time"), // "HH:MM", nullable
+    dayOrder: integer("day_order"),
+    // Execution facts, recorded as the block moves through the machine.
+    actualStartAt: timestamp("actual_start_at", { withTimezone: true }),
+    actualEndAt: timestamp("actual_end_at", { withTimezone: true }),
+    notCompletedCause: text("not_completed_cause").$type<NotCompletedCause>(),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   },
-  (table) => [index("block_week_idx").on(table.weekId)],
+  (table) => [
+    index("block_week_idx").on(table.weekId),
+    // The Today / day / recovery queries all filter by scheduled_date.
+    index("block_scheduled_date_idx").on(table.scheduledDate),
+  ],
 );
