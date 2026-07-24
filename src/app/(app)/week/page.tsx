@@ -23,11 +23,6 @@ import { GoalsEditor } from "@/ui/GoalsEditor";
 import { LoadSignal } from "@/ui/LoadSignal";
 import { PoolBlockCard } from "@/ui/PoolBlockCard";
 
-// Blocks that still count as this week's pending plan (not yet resolved). The
-// load signal is computed from these — scheduling a block (pool → scheduled)
-// keeps it in the count; only finishing/skipping a block resolves it out.
-const PENDING_STATUSES = new Set(["pool", "scheduled", "active"]);
-
 function formatRange(start: string, end: string, language: "he" | "en"): string {
   const toUTC = (d: string) => {
     const [y, m, day] = d.split("-").map(Number) as [number, number, number];
@@ -84,28 +79,36 @@ export default async function WeekPage({
   const goalsByPosition: Record<number, string> = {};
   for (const g of goals) goalsByPosition[g.position] = g.text;
 
-  // Pool = still to place; scheduled = already on a day (pending). The load
-  // signal counts everything still pending, so scheduling never shrinks it —
-  // only finishing or skipping a block resolves it out of the week's plan.
+  // Pool = still to place; onDays = already placed (whatever became of it).
+  // The load signal is the week's TOTAL PLAN: it counts every block not deleted,
+  // so it never moves when you schedule a block OR finish one — planned hours are
+  // planned, not done. Only deleting a block un-plans it.
   const pool = weekBlocks.filter((b) => b.status === "pool");
-  const scheduled = weekBlocks.filter((b) => b.status === "scheduled" || b.status === "active");
-  const pendingBlocks = weekBlocks.filter((b) => PENDING_STATUSES.has(b.status));
+  const onDays = weekBlocks.filter((b) => b.status !== "pool");
 
   const load = computeLoad(
-    pendingBlocks.map((b) => ({ category: b.category, durationMin: b.durationMin })),
+    weekBlocks.map((b) => ({ category: b.category, durationMin: b.durationMin })),
     me.loadThresholdHours,
   );
 
-  // Scheduled blocks grouped by day, then part of day, for the "on your days" view.
-  const scheduledByDate = new Map<string, typeof scheduled>();
-  for (const b of scheduled) {
+  // Placed blocks grouped by day, then part of day, for the "on your days" view.
+  const onDaysByDate = new Map<string, typeof onDays>();
+  for (const b of onDays) {
     if (!b.scheduledDate) continue;
-    const list = scheduledByDate.get(b.scheduledDate) ?? [];
+    const list = onDaysByDate.get(b.scheduledDate) ?? [];
     list.push(b);
-    scheduledByDate.set(b.scheduledDate, list);
+    onDaysByDate.set(b.scheduledDate, list);
   }
-  const scheduledDates = [...scheduledByDate.keys()].sort();
+  const onDaysDates = [...onDaysByDate.keys()].sort();
   const partIndex = (p: PartOfDay | null) => (p ? PARTS_OF_DAY.indexOf(p) : 99);
+  // Neutral state word for a resolved block (the sanctioned vocabulary); null
+  // while it's still pending on the day.
+  const stateLabel = (status: string): string | null => {
+    if (status === "done") return copy.states.completed;
+    if (status === "done_partial") return copy.states.stoppedEarly;
+    if (status === "not_completed") return copy.states.notCompleted;
+    return null;
+  };
 
   const nextStart = nextWeekStart(currentStart);
   const nextPlannable = isWeekPlannable(nextStart, now, me.timezone, weekStartDay);
@@ -150,7 +153,7 @@ export default async function WeekPage({
           }))}
         />
 
-        {pool.length === 0 && scheduled.length === 0 ? (
+        {pool.length === 0 && onDays.length === 0 ? (
           <p className="opacity-70">{copy.planning.poolEmpty}</p>
         ) : (
           <>
@@ -189,13 +192,13 @@ export default async function WeekPage({
               </div>
             )}
 
-            {scheduled.length > 0 && (
+            {onDays.length > 0 && (
               <div className="flex flex-col gap-3">
                 <h3 className="text-sm font-semibold opacity-60">
                   {copy.planning.scheduledTitle}
                 </h3>
-                {scheduledDates.map((date) => {
-                  const dayBlocks = [...scheduledByDate.get(date)!].sort(
+                {onDaysDates.map((date) => {
+                  const dayBlocks = [...onDaysByDate.get(date)!].sort(
                     (a, b) =>
                       partIndex(a.partOfDay) - partIndex(b.partOfDay) ||
                       (a.dayOrder ?? 0) - (b.dayOrder ?? 0),
@@ -210,20 +213,26 @@ export default async function WeekPage({
                         {formatDayLabel(date, me.language)}
                       </Link>
                       <ul className="flex flex-col gap-2">
-                        {dayBlocks.map((b) => (
-                          <li
-                            key={b.id}
-                            className="flex items-center justify-between gap-3 rounded-xl border border-gray-100 px-4 py-3"
-                          >
-                            <span dir="auto" className="font-medium">
-                              {b.name}
-                            </span>
-                            <span className="text-sm opacity-50">
-                              {b.partOfDay ? `${copy.parts[b.partOfDay]} · ` : ""}
-                              {b.durationMin} {copy.planning.minutesShort}
-                            </span>
-                          </li>
-                        ))}
+                        {dayBlocks.map((b) => {
+                          const label = stateLabel(b.status);
+                          return (
+                            <li
+                              key={b.id}
+                              className="flex items-center justify-between gap-3 rounded-xl border border-gray-100 px-4 py-3"
+                            >
+                              <span dir="auto" className="font-medium">
+                                {b.name}
+                              </span>
+                              <span className="flex items-baseline gap-2 text-sm opacity-50">
+                                {label ? <span>{label}</span> : null}
+                                <span>
+                                  {b.partOfDay ? `${copy.parts[b.partOfDay]} · ` : ""}
+                                  {b.durationMin} {copy.planning.minutesShort}
+                                </span>
+                              </span>
+                            </li>
+                          );
+                        })}
                       </ul>
                     </div>
                   );
@@ -233,6 +242,14 @@ export default async function WeekPage({
           </>
         )}
       </section>
+
+      {/* A clear exit from planning back to the main day view (Today). */}
+      <Link
+        href="/"
+        className="min-h-12 rounded-xl bg-gray-900 px-5 py-3 text-center font-semibold text-white"
+      >
+        {copy.scheduling.backToToday}
+      </Link>
     </section>
   );
 }

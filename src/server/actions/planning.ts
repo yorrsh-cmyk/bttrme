@@ -190,16 +190,19 @@ export async function updateBlock(
   return OK;
 }
 
-export async function removeBlock(formData: FormData): Promise<void> {
+export async function deleteBlock(formData: FormData): Promise<void> {
   await requireUser();
   const id = String(formData.get("id") ?? "");
   if (!id) return;
-  // A removed block is hidden from the pool but kept in history; the event is
-  // queryable (PRD 02 §10). Only pool blocks can be removed this way.
-  await db
-    .update(block)
-    .set({ status: "removed" })
-    .where(and(eq(block.id, id), eq(block.status, "pool")));
-  await appendEvent(ENTITY.block, id, EVENT.blockRemoved, {});
+  // A pool block is a plan, not history (IA Part F). Created by mistake → really
+  // delete it, don't archive it. Only pool blocks (never scheduled/executed)
+  // qualify; the event log keeps the immutable record that it existed.
+  const deleted = await db
+    .delete(block)
+    .where(and(eq(block.id, id), eq(block.status, "pool")))
+    .returning({ id: block.id });
+  if (deleted.length > 0) {
+    await appendEvent(ENTITY.block, id, EVENT.blockDeleted, {});
+  }
   revalidatePath("/week");
 }

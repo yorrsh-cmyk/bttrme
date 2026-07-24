@@ -26,6 +26,10 @@ export const EVENT = {
   blockAddedToPool: "block_added_to_pool",
   blockEdited: "block_edited",
   blockRemoved: "block_removed",
+  // A pool block created by mistake is a plan artifact, not history — hard-deleted
+  // (IA Part F: plans are editable). The log keeps this immutable trace that it
+  // once existed and was deleted.
+  blockDeleted: "block_deleted",
   // M3 (PRD 03 §7): the execution lifecycle. block_moved carries from/to +
   // reason; block_completed carries full|partial; block_not_completed carries
   // the cause (chosen|auto). day_auto_closed / absence_archived are the

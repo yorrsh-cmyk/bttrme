@@ -41,16 +41,18 @@ test.describe("weekly planning", () => {
     await page.getByRole("button", { name: "הוספה מהספרייה" }).click();
     await page.getByRole("button", { name: new RegExp(name) }).click();
 
-    // The pool card is the listitem that carries this name AND a remove button
-    // (distinguishes it from the still-open picker row of the same name).
+    // The pool card is the listitem that carries this name AND an edit button
+    // (distinguishes it from the still-open picker row; edit persists through the
+    // delete-confirm toggle, unlike the delete label itself).
     const card = page
       .getByRole("listitem")
       .filter({ hasText: name })
-      .filter({ has: page.getByRole("button", { name: "הסרה" }) });
+      .filter({ has: page.getByRole("button", { name: "עריכה" }) });
     await expect(card).toBeVisible();
 
-    // Remove it — the card leaves the pool.
-    await card.getByRole("button", { name: "הסרה" }).click();
+    // Delete it (two-tap confirm) — the card leaves the pool for good.
+    await card.getByRole("button", { name: "מחיקה" }).click();
+    await card.getByRole("button", { name: "למחוק?" }).click();
     await expect(card).toHaveCount(0);
   });
 

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { removeBlock } from "@/server/actions/planning";
+import { deleteBlock } from "@/server/actions/planning";
 import { BlockForm } from "@/ui/BlockForm";
 import { SubmitButton } from "@/ui/SubmitButton";
 import { useT } from "@/ui/i18n-context";
@@ -19,6 +19,7 @@ export interface PoolBlock {
 export function PoolBlockCard({ block }: { block: PoolBlock }) {
   const t = useT();
   const [editing, setEditing] = useState(false);
+  const [confirming, setConfirming] = useState(false);
 
   if (editing) {
     return (
@@ -58,12 +59,22 @@ export function PoolBlockCard({ block }: { block: PoolBlock }) {
         >
           {t.planning.edit}
         </button>
-        <form action={removeBlock}>
-          <input type="hidden" name="id" value={block.id} />
-          <SubmitButton className="text-sm underline underline-offset-4 opacity-70">
-            {t.planning.remove}
-          </SubmitButton>
-        </form>
+        {confirming ? (
+          <form action={deleteBlock}>
+            <input type="hidden" name="id" value={block.id} />
+            <SubmitButton className="text-sm font-medium underline underline-offset-4">
+              {t.planning.deleteConfirm}
+            </SubmitButton>
+          </form>
+        ) : (
+          <button
+            type="button"
+            onClick={() => setConfirming(true)}
+            className="text-sm underline underline-offset-4 opacity-70"
+          >
+            {t.planning.delete}
+          </button>
+        )}
       </div>
     </li>
   );

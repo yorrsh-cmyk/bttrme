@@ -49,9 +49,10 @@ export const en = {
     defer: "Later today",
     move: "Another day",
     skip: "Skip",
-    // Close-out — "stopped early" is a completion, not a failure.
+    // Close-out. The distinction is OUTCOME, not time: "Done" = I finished what
+    // it was for; "Stopped partway" = I ended it having done part. Both are valid.
     done: "Done",
-    stoppedEarly: "Stopped early",
+    stoppedEarly: "Stopped partway",
     // Stale active-block prompt (FR-7): asked, never auto-failed.
     stillGoing: "Still going?",
     // Calm empty / finished states — no counts, no praise.
@@ -139,6 +140,8 @@ export const en = {
     pickerEmpty: "Your library is empty.",
     goToLibrary: "Go to the library",
     remove: "Remove",
+    delete: "Delete",
+    deleteConfirm: "Delete?",
     edit: "Edit",
     planNextWeek: "Plan next week",
     thisWeek: "This week",
@@ -177,7 +180,7 @@ export const en = {
     deferred: "Deferred",
     moved: "Moved",
     skipped: "Skipped",
-    stoppedEarly: "Stopped early",
+    stoppedEarly: "Stopped partway",
   },
   languageNames: {
     // Each language is always written in itself, in both catalogs

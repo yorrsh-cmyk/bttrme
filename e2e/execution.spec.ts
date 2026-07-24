@@ -71,11 +71,11 @@ test.describe("execution", () => {
 
     // Start → the active close-out (Done / Stopped early), neutral elapsed.
     await page.getByRole("button", { name: "התחל" }).click();
-    await expect(page.getByRole("button", { name: "סיים", exact: true })).toBeVisible();
+    await expect(page.getByRole("button", { name: "סיימתי" })).toBeVisible();
     await expect(page.getByText("מתוכנן")).toBeVisible();
 
     // Done → the calm empty state, no counts, no judgment.
-    await page.getByRole("button", { name: "סיים", exact: true }).click();
+    await page.getByRole("button", { name: "סיימתי" }).click();
     await expect(page.getByText("אין עוד תכנונים")).toBeVisible();
   });
 
@@ -111,7 +111,7 @@ test.describe("execution", () => {
     await upcoming.getByRole("button", { name: "התחל" }).click();
 
     // It becomes the active block: the close-out (Done) is now shown.
-    await expect(page.getByRole("button", { name: "סיים", exact: true })).toBeVisible();
+    await expect(page.getByRole("button", { name: "סיימתי" })).toBeVisible();
   });
 
   test("returning after a simulated absence lands on a clean today", async ({ page }) => {
