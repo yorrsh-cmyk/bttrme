@@ -79,6 +79,8 @@ export const he: Catalog = {
     moveTitle: "העברה ליום אחר",
     up: "↑",
     down: "↓",
+    backToToday: "חזרה להיום",
+    done: "סיום",
   },
   review: {
     empty: "המבט אחורה יקרה כאן, כשיהיה שבוע להסתכל עליו.",
@@ -122,6 +124,8 @@ export const he: Catalog = {
     saveGoals: "שמירה",
     goalsSaved: "נשמר.",
     poolTitle: "הבלוקים של השבוע",
+    poolToSchedule: "עוד לא שובצו ליום",
+    scheduledTitle: "על הימים שלך",
     poolEmpty: "עוד אין בלוקים — אפשר להוסיף כמה מהספרייה.",
     addFromLibrary: "הוספה מהספרייה",
     addOneOff: "בלוק חד־פעמי",

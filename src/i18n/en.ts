@@ -85,6 +85,8 @@ export const en = {
     moveTitle: "Move to another day",
     up: "↑",
     down: "↓",
+    backToToday: "Back to today",
+    done: "Done",
   },
   review: {
     empty: "Reviews will happen here, once there is a week to look at.",
@@ -128,6 +130,8 @@ export const en = {
     saveGoals: "Save",
     goalsSaved: "Saved.",
     poolTitle: "This week's blocks",
+    poolToSchedule: "Not yet placed on a day",
+    scheduledTitle: "On your days",
     poolEmpty: "No blocks yet — add a few from the library.",
     addFromLibrary: "Add from library",
     addOneOff: "One-off block",

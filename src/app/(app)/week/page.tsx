@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { BLOCK_CATEGORIES } from "@/domain/blockTypes";
+import { BLOCK_CATEGORIES, PARTS_OF_DAY, type PartOfDay } from "@/domain/blockTypes";
 import { computeLoad } from "@/domain/load";
 import {
   isWeekPlannable,
@@ -15,13 +15,18 @@ import {
   getOrCreateWeek,
   listActiveTemplates,
   listGoals,
-  listPoolBlocks,
+  listWeekBlocks,
 } from "@/server/queries";
 import { getSessionUser } from "@/server/session";
 import { BlockPicker } from "@/ui/BlockPicker";
 import { GoalsEditor } from "@/ui/GoalsEditor";
 import { LoadSignal } from "@/ui/LoadSignal";
 import { PoolBlockCard } from "@/ui/PoolBlockCard";
+
+// Blocks that still count as this week's pending plan (not yet resolved). The
+// load signal is computed from these — scheduling a block (pool → scheduled)
+// keeps it in the count; only finishing/skipping a block resolves it out.
+const PENDING_STATUSES = new Set(["pool", "scheduled", "active"]);
 
 function formatRange(start: string, end: string, language: "he" | "en"): string {
   const toUTC = (d: string) => {
@@ -34,6 +39,16 @@ function formatRange(start: string, end: string, language: "he" | "en"): string 
     timeZone: "UTC",
   });
   return fmt.formatRange(toUTC(start), toUTC(end));
+}
+
+function formatDayLabel(date: string, language: "he" | "en"): string {
+  const [y, m, d] = date.split("-").map(Number) as [number, number, number];
+  return new Intl.DateTimeFormat(localeFor(language), {
+    weekday: "long",
+    day: "numeric",
+    month: "long",
+    timeZone: "UTC",
+  }).format(new Date(Date.UTC(y, m - 1, d)));
 }
 
 export default async function WeekPage({
@@ -60,19 +75,37 @@ export default async function WeekPage({
   }
 
   const week = await getOrCreateWeek(start);
-  const [goals, blocks, templates] = await Promise.all([
+  const [goals, weekBlocks, templates] = await Promise.all([
     listGoals(week.id),
-    listPoolBlocks(week.id),
+    listWeekBlocks(week.id),
     listActiveTemplates(),
   ]);
 
   const goalsByPosition: Record<number, string> = {};
   for (const g of goals) goalsByPosition[g.position] = g.text;
 
+  // Pool = still to place; scheduled = already on a day (pending). The load
+  // signal counts everything still pending, so scheduling never shrinks it —
+  // only finishing or skipping a block resolves it out of the week's plan.
+  const pool = weekBlocks.filter((b) => b.status === "pool");
+  const scheduled = weekBlocks.filter((b) => b.status === "scheduled" || b.status === "active");
+  const pendingBlocks = weekBlocks.filter((b) => PENDING_STATUSES.has(b.status));
+
   const load = computeLoad(
-    blocks.map((b) => ({ category: b.category, durationMin: b.durationMin })),
+    pendingBlocks.map((b) => ({ category: b.category, durationMin: b.durationMin })),
     me.loadThresholdHours,
   );
+
+  // Scheduled blocks grouped by day, then part of day, for the "on your days" view.
+  const scheduledByDate = new Map<string, typeof scheduled>();
+  for (const b of scheduled) {
+    if (!b.scheduledDate) continue;
+    const list = scheduledByDate.get(b.scheduledDate) ?? [];
+    list.push(b);
+    scheduledByDate.set(b.scheduledDate, list);
+  }
+  const scheduledDates = [...scheduledByDate.keys()].sort();
+  const partIndex = (p: PartOfDay | null) => (p ? PARTS_OF_DAY.indexOf(p) : 99);
 
   const nextStart = nextWeekStart(currentStart);
   const nextPlannable = isWeekPlannable(nextStart, now, me.timezone, weekStartDay);
@@ -117,38 +150,87 @@ export default async function WeekPage({
           }))}
         />
 
-        {blocks.length === 0 ? (
+        {pool.length === 0 && scheduled.length === 0 ? (
           <p className="opacity-70">{copy.planning.poolEmpty}</p>
         ) : (
-          <div className="flex flex-col gap-5">
-            {BLOCK_CATEGORIES.map((category) => {
-              const inCategory = blocks.filter((b) => b.category === category);
-              if (inCategory.length === 0) return null;
-              return (
-                <div key={category} className="flex flex-col gap-2">
-                  <h3 className="text-sm font-semibold opacity-60">
-                    {copy.categories[category]}
-                  </h3>
-                  <ul className="flex flex-col gap-2">
-                    {inCategory.map((b) => (
-                      <PoolBlockCard
-                        key={b.id}
-                        block={{
-                          id: b.id,
-                          name: b.name,
-                          category: b.category,
-                          durationMin: b.durationMin,
-                          expectedOutcome: b.expectedOutcome,
-                          firstAction: b.firstAction,
-                          notes: b.notes,
-                        }}
-                      />
-                    ))}
-                  </ul>
-                </div>
-              );
-            })}
-          </div>
+          <>
+            {pool.length > 0 && (
+              <div className="flex flex-col gap-3">
+                <h3 className="text-sm font-semibold opacity-60">
+                  {copy.planning.poolToSchedule}
+                </h3>
+                {BLOCK_CATEGORIES.map((category) => {
+                  const inCategory = pool.filter((b) => b.category === category);
+                  if (inCategory.length === 0) return null;
+                  return (
+                    <div key={category} className="flex flex-col gap-2">
+                      <h4 className="text-xs font-semibold uppercase tracking-wide opacity-50">
+                        {copy.categories[category]}
+                      </h4>
+                      <ul className="flex flex-col gap-2">
+                        {inCategory.map((b) => (
+                          <PoolBlockCard
+                            key={b.id}
+                            block={{
+                              id: b.id,
+                              name: b.name,
+                              category: b.category,
+                              durationMin: b.durationMin,
+                              expectedOutcome: b.expectedOutcome,
+                              firstAction: b.firstAction,
+                              notes: b.notes,
+                            }}
+                          />
+                        ))}
+                      </ul>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+
+            {scheduled.length > 0 && (
+              <div className="flex flex-col gap-3">
+                <h3 className="text-sm font-semibold opacity-60">
+                  {copy.planning.scheduledTitle}
+                </h3>
+                {scheduledDates.map((date) => {
+                  const dayBlocks = [...scheduledByDate.get(date)!].sort(
+                    (a, b) =>
+                      partIndex(a.partOfDay) - partIndex(b.partOfDay) ||
+                      (a.dayOrder ?? 0) - (b.dayOrder ?? 0),
+                  );
+                  return (
+                    <div key={date} className="flex flex-col gap-2">
+                      <Link
+                        href={`/day/${date}`}
+                        className="text-sm font-medium underline underline-offset-4"
+                        dir="auto"
+                      >
+                        {formatDayLabel(date, me.language)}
+                      </Link>
+                      <ul className="flex flex-col gap-2">
+                        {dayBlocks.map((b) => (
+                          <li
+                            key={b.id}
+                            className="flex items-center justify-between gap-3 rounded-xl border border-gray-100 px-4 py-3"
+                          >
+                            <span dir="auto" className="font-medium">
+                              {b.name}
+                            </span>
+                            <span className="text-sm opacity-50">
+                              {b.partOfDay ? `${copy.parts[b.partOfDay]} · ` : ""}
+                              {b.durationMin} {copy.planning.minutesShort}
+                            </span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </>
         )}
       </section>
     </section>

@@ -161,6 +161,15 @@ export default async function DayPage({
           </ul>
         )}
       </section>
+
+      {/* Placement auto-saves; this is the clear "I'm done here" exit that
+          lands back on the main day view (Today). */}
+      <Link
+        href="/"
+        className="min-h-12 rounded-xl bg-gray-900 px-5 py-3 text-center font-semibold text-white"
+      >
+        {copy.scheduling.backToToday}
+      </Link>
     </section>
   );
 }

@@ -12,6 +12,10 @@ export default async function globalSetup() {
   const sql = neon(process.env.DATABASE_URL);
 
   await sql.query("DELETE FROM login_attempt");
+  // Clear any leftover scheduled/executed blocks so the execution tests start
+  // from a clean today (a stray scheduled block would steal the foreground).
+  // Dev is the throwaway e2e database, so this is safe.
+  await sql.query("DELETE FROM block WHERE status NOT IN ('pool', 'removed')");
   // Remove leftover 'בדיקה …' templates/blocks from earlier planning runs.
   await sql.query(
     "DELETE FROM block WHERE template_id IN (SELECT id FROM block_template WHERE name LIKE 'בדיקה %')",

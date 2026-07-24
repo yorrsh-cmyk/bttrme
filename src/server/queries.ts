@@ -1,5 +1,5 @@
 import "server-only";
-import { and, asc, eq, isNull, lt, notInArray } from "drizzle-orm";
+import { and, asc, eq, isNull, lt, ne, notInArray } from "drizzle-orm";
 import { db } from "@/db/client";
 import { ENTITY, EVENT, appendEvent } from "@/db/events";
 import { block, blockTemplate, week, weeklyGoal } from "@/db/schema";
@@ -86,6 +86,20 @@ export function listPoolBlocks(weekId: string): Promise<Block[]> {
     .from(block)
     .where(and(eq(block.weekId, weekId), eq(block.status, "pool")))
     .orderBy(asc(block.category), asc(block.createdAt));
+}
+
+/**
+ * Every live block in a week (pool + scheduled + executed), removed hidden.
+ * This is the week's *planned load*: scheduling a block onto a day, or even
+ * finishing it, does not reduce the week's commitment — so the load signal is
+ * computed from this, never from the shrinking pool alone.
+ */
+export function listWeekBlocks(weekId: string): Promise<Block[]> {
+  return db
+    .select()
+    .from(block)
+    .where(and(eq(block.weekId, weekId), ne(block.status, "removed")))
+    .orderBy(asc(block.scheduledDate), asc(block.dayOrder), asc(block.createdAt));
 }
 
 // --- M3: scheduling, execution, recovery -----------------------------------
