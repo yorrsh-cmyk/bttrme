@@ -2,11 +2,14 @@
 
 Personal (single-user) web app for Michael that bridges the gap between intention and action. This is **not** a productivity/task app — read `phase_1_need_interpretation.md` before touching product behavior.
 
-## Current status (2026-07-23)
+## Current status (2026-07-24)
 
-**M1 (Foundation and Authentication) is complete, deployed, and approved.** Live at `bttrme-ashen.vercel.app` (Vercel Hobby); Neon `main` + `dev` branches; migration 001 applied; single user seeded (`yorrsh`, Asia/Jerusalem, Sunday, Hebrew). All PRD 01 §10 acceptance criteria met — HTTPS+HSTS, iPhone+laptop sign-in incl. home-screen mode, 5-failure lockout (verified), bilingual RTL/LTR shell, CI green, Neon PITR restore drilled (see `RESTORE.md`), cold-start bearable (<2s, no warm-up cron), $0/month.
+**M1 (Foundation) and M2 (Weekly Planning Core) are complete, deployed, and approved.** Live at `bttrme-ashen.vercel.app` (Vercel Hobby); Neon `main` + `dev` branches; migrations 0000–0002 applied to both; single user seeded (`yorrsh`, Asia/Jerusalem, Sunday, Hebrew).
 
-Next step: **await approval to begin Milestone 2 (Weekly Planning Core)** per `PRD_02_Weekly_Planning_Core.md`. Do not start M2 without Michael's go-ahead. First M2 tasks: migration 002 → `load.ts` + `weekCycle.ts` (pure, tested) → library CRUD → week/goals/pool/load signal → events wiring → Hebrew copy review of planning screens.
+- **M1:** HTTPS+HSTS, iPhone+laptop sign-in incl. home-screen mode, 5-failure lockout, bilingual RTL/LTR shell, Neon PITR restore drilled (`RESTORE.md`), cold-start bearable, $0/month.
+- **M2:** block-template library (create/edit/archive; delete only when unused), weeks with ≤3 goals materialized on first visit, week pool with a non-blocking load signal, all mutations to the append-only `events` log. Domain modules `weekCycle.ts` + `load.ts` (pure, tested). Hebrew planning-screen copy reviewed & approved. 40 unit + 14 e2e tests green.
+
+Next step: **await approval to begin Milestone 3 (Daily Execution and Block Management)** per `PRD_03_Daily_Execution_and_Block_Management.md` — the kickoff prompt is in `NEXT_PROMPT.md`. Do not start M3 without Michael's go-ahead. First M3 tasks: migration 003 (block scheduling/state fields + `user.day_end_hour`) → `blockMachine.ts` fully tested → day scheduling UI → execution view (four responses, ≤2 taps) → recovery screens → `/api/cron` auto-close backstop → Hebrew copy review of execution + recovery (the most sensitive copy in the product). This is the heart of the product (PRD 03 §1) — protect "silence in the moment," no aggregate numbers, no judgment vocabulary, no red.
 
 ## Source-of-truth documents (in this folder, all approved)
 
